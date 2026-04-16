@@ -388,43 +388,45 @@ async function loadFromSheets(){
     const pagMap={};
     for(const p of pagData){const pi=p['PI']?p['PI'].trim():null;if(pi)pagMap[pi]=p;}
     // Parse COBROS 2026 (2-row header — row 0 is group names, row 1 is real headers)
-    if(cobRows.length>2){
-      const cobHdr=cobRows[1].map(h=>h.trim());
+    if(cobRows.length>1){
+      // COBROS 2026: parse by column INDEX (bulletproof, ignores header row issues)
+      // Find data start: skip rows until we find one where col[0] looks like a PI number
       const cobRecs=[];
-      for(let i=2;i<cobRows.length;i++){
-        const row=cobRows[i];if(!row.some(c=>c.trim()))continue;
-        const r={};
-        cobHdr.forEach((h,idx)=>{r[h]=row[idx]!==undefined?row[idx].trim()||null:null;});
-        const cpi=r['Pi']?r['Pi'].trim():null;if(!cpi)continue;
+      for(let i=0;i<cobRows.length;i++){
+        const row=cobRows[i];
+        const v0=(row[0]||'').trim();
+        // PI is a number or number-dash-number like "966", "1012-1"
+        if(!v0||!/^\d/.test(v0))continue;
         cobRecs.push({
-          PI:cpi,NAVE:r['Nave']||null,AGENTE_MAR:r['EMBARCADOR']||null,
-          FACT_FLETE_MAR:r['Flete Maritimo N° Factura']||null,
-          MONTO_FLETE_MAR:parseNum(r['Monto USD Flete maritimo']),
-          AGENTE_TER:r['Encargado terrestre']||null,
-          FACT_FLETE_TER:r['Flete Terrestre N° Factura']||null,
-          MONTO_FLETE_TER:parseNum(r['Monto CLP flete terrestre']),
-          FACT_GETOUT:r['N° Factura getout']||null,
-          MONTO_GETOUT:parseNum(r['Monto Getout CLP']),
-          FACT_GAS_LOC:r['Gastos Locales Embarcador N° fatura']||null,
-          MONTO_GAS_LOC:parseNum(r['Monto CLP gastos locales']),
-          FACT_ADUANA:r['Fac Aga (Agente aduana)']||null,
-          MONTO_ADUANA:parseNum(r['Monto total factura de agente de aduana']),
-          CERT_CAPTURA:parseNum(r['Certificado de captura']),
-          NEPPEX_G:parseNum(r['Neppex']),
-          SANITARIO:parseNum(r['Sanitario']),
-          VGM:parseNum(r['Vgm']),
-          SCANER:parseNum(r['Scaner']),
-          CERT_ORIGEN:parseNum(r['Certificado de origen']),
-          FEE:parseNum(r['Fee']),
-          TOTAL_GASTOS:parseNum(r['Total']),
-          DIFERENCIA:parseNum(r['Diferencia']),
-          ESTADO_COBRO:r['Estado de cobros']||null,
-          MONTO_COURIER:parseNum(r['Monto Serv Courier']),
-          MONTO_CAMBIO_EMISION:parseNum(r['Monto cambio de emision']),
-          MONTO_CORRECCION_BL:parseNum(r['Monto Correccion BL']),
+          PI:v0,
+          NAVE:(row[1]||'').trim()||null,
+          AGENTE_MAR:(row[2]||'').trim()||null,
+          FACT_FLETE_MAR:(row[3]||'').trim()||null,
+          MONTO_FLETE_MAR:parseNum(row[4]),
+          AGENTE_TER:(row[5]||'').trim()||null,
+          FACT_FLETE_TER:(row[6]||'').trim()||null,
+          MONTO_FLETE_TER:parseNum(row[7]),
+          FACT_GETOUT:(row[9]||'').trim()||null,
+          MONTO_GETOUT:parseNum(row[10]),
+          FACT_GAS_LOC:(row[11]||'').trim()||null,
+          MONTO_GAS_LOC:parseNum(row[12]),
+          FACT_ADUANA:(row[13]||'').trim()||null,
+          MONTO_ADUANA:parseNum(row[14]),
+          CERT_CAPTURA:parseNum(row[15]),
+          SANITARIO:parseNum(row[17]),
+          VGM:parseNum(row[18]),
+          SCANER:parseNum(row[19]),
+          CERT_ORIGEN:parseNum(row[20]),
+          FEE:parseNum(row[21]),
+          TOTAL_GASTOS:parseNum(row[22]),
+          DIFERENCIA:parseNum(row[23]),
+          ESTADO_COBRO:(row[24]||'').trim()||null,
+          MONTO_COURIER:parseNum(row[29]),
+          MONTO_CAMBIO_EMISION:parseNum(row[31]),
+          MONTO_CORRECCION_BL:parseNum(row[33]),
         });
       }
-      COBROS_DB=cobRecs;
+      if(cobRecs.length>0)COBROS_DB=cobRecs;
     }
 
     const recs=[];
