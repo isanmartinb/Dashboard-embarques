@@ -283,10 +283,11 @@ td{padding:7px 11px;vertical-align:middle;}
       <div class="twrap scroll">
         <table>
           <thead><tr>
-            <th>PI</th><th>Nave</th><th>Ag. Marítimo</th><th>Fact. Flete Mar</th><th>Flete Mar USD</th>
-            <th>Ag. Terrestre</th><th>Fact. Flete Ter</th><th>Flete Ter CLP</th>
-            <th>Getout CLP</th><th>Gastos Loc. CLP</th>
-            <th>Fact. Aduana</th><th>Aduana CLP</th>
+            <th>PI</th><th>Nave</th><th>Ag. Marítimo</th><th>Fact. Flete Mar</th><th>Flete Mar USD</th><th>F. Pago Mar</th>
+            <th>Ag. Terrestre</th><th>Fact. Flete Ter</th><th>Flete Ter CLP</th><th>F. Pago Ter</th>
+            <th>Fact. Getout</th><th>Getout CLP</th><th>F. Pago Getout</th>
+            <th>Fact. Gastos Loc.</th><th>Gastos Loc. CLP</th>
+            <th>Fact. Aduana</th><th>Aduana CLP</th><th>F. Pago Aduana</th>
             <th>Sanitario</th><th>VGM</th><th>Fee</th><th>Total Gastos</th><th>Estado</th>
           </tr></thead>
           <tbody id="gastosTable"></tbody>
@@ -403,27 +404,31 @@ async function loadFromSheets(){
           AGENTE_MAR:(row[2]||'').trim()||null,
           FACT_FLETE_MAR:(row[3]||'').trim()||null,
           MONTO_FLETE_MAR:parseNum(row[4]),
-          AGENTE_TER:(row[5]||'').trim()||null,
-          FACT_FLETE_TER:(row[6]||'').trim()||null,
-          MONTO_FLETE_TER:parseNum(row[7]),
-          FACT_GETOUT:(row[9]||'').trim()||null,
-          MONTO_GETOUT:parseNum(row[10]),
-          FACT_GAS_LOC:(row[11]||'').trim()||null,
-          MONTO_GAS_LOC:parseNum(row[12]),
-          FACT_ADUANA:(row[13]||'').trim()||null,
-          MONTO_ADUANA:parseNum(row[14]),
-          CERT_CAPTURA:parseNum(row[15]),
-          SANITARIO:parseNum(row[17]),
-          VGM:parseNum(row[18]),
-          SCANER:parseNum(row[19]),
-          CERT_ORIGEN:parseNum(row[20]),
-          FEE:parseNum(row[21]),
-          TOTAL_GASTOS:parseNum(row[22]),
-          DIFERENCIA:parseNum(row[23]),
-          ESTADO_COBRO:(row[24]||'').trim()||null,
-          MONTO_COURIER:parseNum(row[29]),
-          MONTO_CAMBIO_EMISION:parseNum(row[31]),
-          MONTO_CORRECCION_BL:parseNum(row[33]),
+          FECHA_PAGO_FLETE_MAR:parseSheetDate(row[5]),
+          AGENTE_TER:(row[6]||'').trim()||null,
+          FACT_FLETE_TER:(row[7]||'').trim()||null,
+          MONTO_FLETE_TER:parseNum(row[8]),
+          FECHA_PAGO_FLETE_TER:parseSheetDate(row[9]),
+          FACT_GETOUT:(row[11]||'').trim()||null,
+          MONTO_GETOUT:parseNum(row[12]),
+          FECHA_PAGO_GETOUT:parseSheetDate(row[13]),
+          FACT_GAS_LOC:(row[14]||'').trim()||null,
+          MONTO_GAS_LOC:parseNum(row[15]),
+          FACT_ADUANA:(row[16]||'').trim()||null,
+          MONTO_ADUANA:parseNum(row[17]),
+          FECHA_PAGO_ADUANA:parseSheetDate(row[18]),
+          CERT_CAPTURA:parseNum(row[19]),
+          SANITARIO:parseNum(row[21]),
+          VGM:parseNum(row[22]),
+          SCANER:parseNum(row[23]),
+          CERT_ORIGEN:parseNum(row[24]),
+          FEE:parseNum(row[25]),
+          TOTAL_GASTOS:parseNum(row[26]),
+          DIFERENCIA:parseNum(row[27]),
+          ESTADO_COBRO:(row[28]||'').trim()||null,
+          MONTO_COURIER:parseNum(row[33]),
+          MONTO_CAMBIO_EMISION:parseNum(row[35]),
+          MONTO_CORRECCION_BL:parseNum(row[37]),
         });
       }
       if(cobRecs.length>0)COBROS_DB=cobRecs;
@@ -721,20 +726,26 @@ function renderGastosPage(){
       <td>${r.AGENTE_MAR||'—'}</td>
       <td>${r.FACT_FLETE_MAR||'—'}</td>
       <td>${r.MONTO_FLETE_MAR?'$'+fmt(r.MONTO_FLETE_MAR):'—'}</td>
+      <td>${fmtD(r.FECHA_PAGO_FLETE_MAR)}</td>
       <td>${r.AGENTE_TER||'—'}</td>
       <td>${r.FACT_FLETE_TER||'—'}</td>
       <td>${fmtCLP(r.MONTO_FLETE_TER)}</td>
+      <td>${fmtD(r.FECHA_PAGO_FLETE_TER)}</td>
+      <td>${r.FACT_GETOUT||'—'}</td>
       <td>${fmtCLP(r.MONTO_GETOUT)}</td>
+      <td>${fmtD(r.FECHA_PAGO_GETOUT)}</td>
+      <td>${r.FACT_GAS_LOC||'—'}</td>
       <td>${fmtCLP(r.MONTO_GAS_LOC)}</td>
       <td>${r.FACT_ADUANA||'—'}</td>
       <td>${fmtCLP(r.MONTO_ADUANA)}</td>
+      <td>${fmtD(r.FECHA_PAGO_ADUANA)}</td>
       <td>${fmtCLP(r.SANITARIO)}</td>
       <td>${fmtCLP(r.VGM)}</td>
       <td>${fmtCLP(r.FEE)}</td>
       <td>${fmtCLP(r.TOTAL_GASTOS)}</td>
       <td>${r.ESTADO_COBRO?'<span class="b '+(r.ESTADO_COBRO==='OK'?'b-g':'b-y')+'">'+r.ESTADO_COBRO+'</span>':'—'}</td>
     </tr>
-  `).join('')||'<tr><td colspan="17" class="no-res"><div class="no-res-ic">🔍</div>Sin resultados</td></tr>';
+  `).join('')||'<tr><td colspan="23" class="no-res"><div class="no-res-ic">🔍</div>Sin resultados</td></tr>';
   renderPag('gastosPag',d.length,gastosPage,p=>{gastosPage=p;renderGastosPage();});
 }
 
