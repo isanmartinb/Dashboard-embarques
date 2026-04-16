@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Dashboard Embarques 2026</title>
+<style>
+:root{
+  --nav:#0f2744;--nav2:#1a3a5c;--accent:#0ea5e9;--blue:#2563eb;
+  --green:#10b981;--yellow:#f59e0b;--red:#ef4444;--purple:#8b5cf6;
+  --bg:#f0f4f8;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* HEADER */
+.hdr{background:linear-gradient(135deg,var(--nav) 0%,#0a1d36 100%);color:#fff;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,.35);}
+.hdr-l{display:flex;align-items:center;gap:12px;}
+.hdr-icon{font-size:2rem;}
+.hdr h1{font-size:1.45rem;font-weight:700;}
+.hdr-sub{font-size:.76rem;color:#94a3b8;margin-top:2px;}
+.hdr-r{text-align:right;font-size:.8rem;color:#94a3b8;}
+
+/* NAV TABS */
+.tabs{background:var(--nav);display:flex;gap:0;padding:0 28px;border-bottom:3px solid #0a1d36;}
+.tab{padding:11px 20px;background:none;border:none;cursor:pointer;color:#94a3b8;font-size:.88rem;font-weight:500;border-bottom:3px solid transparent;margin-bottom:-3px;transition:all .18s;display:flex;align-items:center;gap:5px;}
+.tab:hover{color:#fff;background:rgba(255,255,255,.07);}
+.tab.on{color:#fff;border-bottom-color:var(--accent);}
+
+/* MAIN */
+.main{padding:24px 28px;max-width:1600px;margin:0 auto;}
+
+/* PANEL ANIM */
+.panel{display:none;animation:fadeIn .15s ease;}
+.panel.on{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:22px;}
+.kpi{background:var(--card);border-radius:11px;padding:18px 16px;box-shadow:0 1px 5px rgba(0,0,0,.07);border-left:4px solid var(--blue);transition:transform .12s;}
+.kpi:hover{transform:translateY(-2px);}
+.kpi.g{border-left-color:var(--green);}
+.kpi.y{border-left-color:var(--yellow);}
+.kpi.r{border-left-color:var(--red);}
+.kpi.p{border-left-color:var(--purple);}
+.kpi.a{border-left-color:var(--accent);}
+.kpi-lbl{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:7px;}
+.kpi-val{font-size:1.6rem;font-weight:700;line-height:1;}
+.kpi-sub{font-size:.72rem;color:var(--muted);margin-top:3px;}
+
+/* CARDS GRID */
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px;}
+@media(max-width:860px){.cgrid{grid-template-columns:1fr;}}
+.card{background:var(--card);border-radius:11px;padding:18px;box-shadow:0 1px 5px rgba(0,0,0,.07);}
+.card-ttl{font-size:.88rem;font-weight:700;color:var(--nav2);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+
+/* BAR CHART */
+.bc{display:flex;flex-direction:column;gap:5px;}
+.bc-row{display:flex;align-items:center;gap:7px;}
+.bc-lbl{font-size:.73rem;color:var(--text);width:110px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;}
+.bc-trk{flex:1;background:#f1f5f9;border-radius:4px;height:18px;}
+.bc-fill{height:100%;border-radius:4px;transition:width .4s;}
+.bc-val{font-size:.7rem;color:var(--muted);width:55px;flex-shrink:0;}
+
+/* DONUT */
+.donut-wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.donut-leg{display:flex;flex-direction:column;gap:7px;}
+.leg-row{display:flex;align-items:center;gap:7px;font-size:.78rem;}
+.leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+/* SECTION BOX */
+.sbox{background:var(--card);border-radius:11px;box-shadow:0 1px 5px rgba(0,0,0,.07);margin-bottom:22px;overflow:hidden;}
+.sbox-hdr{padding:14px 18px;background:#f8fafc;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.sbox-ttl{font-size:.95rem;font-weight:700;color:var(--nav2);display:flex;align-items:center;gap:7px;}
+.sbox-body{padding:18px;}
+
+/* FILTERS */
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;}
+.fg{display:flex;flex-direction:column;gap:3px;}
+.fg label{font-size:.68rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+select,input[type=date],input[type=text]{
+  padding:6px 9px;border:1px solid var(--border);border-radius:7px;
+  font-size:.83rem;background:#fff;color:var(--text);outline:none;
+}
+select:focus,input:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(37,99,235,.1);}
+.btn{padding:7px 14px;border:none;border-radius:7px;cursor:pointer;font-size:.83rem;font-weight:600;transition:all .12s;display:inline-flex;align-items:center;gap:4px;}
+.btn-p{background:var(--blue);color:#fff;} .btn-p:hover{background:#1d4ed8;}
+.btn-s{background:var(--bg);color:var(--text);border:1px solid var(--border);} .btn-s:hover{background:var(--border);}
+
+/* TABLE */
+.twrap{overflow-x:auto;border-radius:8px;border:1px solid var(--border);}
+.twrap.scroll{max-height:500px;overflow-y:auto;}
+table{width:100%;border-collapse:collapse;font-size:.8rem;white-space:nowrap;}
+thead tr{background:var(--nav2);color:#fff;position:sticky;top:0;z-index:5;}
+thead th{padding:9px 11px;text-align:left;font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;}
+tbody tr{border-bottom:1px solid var(--border);transition:background .08s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:#f0f7ff;}
+td{padding:7px 11px;vertical-align:middle;}
+
+/* BADGES */
+.b{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:600;letter-spacing:.3px;}
+.b-g{background:#dcfce7;color:#166534;}
+.b-b{background:#dbeafe;color:#1e40af;}
+.b-y{background:#fef9c3;color:#854d0e;}
+.b-r{background:#fee2e2;color:#991b1b;}
+.b-o{background:#ffedd5;color:#9a3412;}
+.b-gray{background:#f1f5f9;color:#475569;}
+
+/* PAGINATION */
+.pag{display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap;}
+.pg{padding:4px 9px;border:1px solid var(--border);background:#fff;border-radius:6px;cursor:pointer;font-size:.8rem;}
+.pg:hover,.pg.on{background:var(--blue);color:#fff;border-color:var(--blue);}
+.pi{font-size:.78rem;color:var(--muted);}
+
+/* QUERY PANEL */
+.qpanel{background:linear-gradient(135deg,#0a1d36 0%,var(--nav2) 100%);border-radius:13px;padding:26px;margin-bottom:24px;color:#fff;}
+.q-ttl{font-size:1.15rem;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:9px;}
+.q-sub{font-size:.82rem;color:#94a3b8;margin-bottom:18px;}
+.q-row{display:flex;gap:8px;}
+.q-input{flex:1;padding:13px 16px;border-radius:9px;border:2px solid rgba(255,255,255,.15);background:rgba(255,255,255,.1);color:#fff;font-size:.93rem;outline:none;}
+.q-input::placeholder{color:rgba(255,255,255,.38);}
+.q-input:focus{border-color:var(--accent);}
+.q-btn{padding:13px 22px;background:var(--accent);color:#fff;border:none;border-radius:9px;cursor:pointer;font-size:.93rem;font-weight:600;white-space:nowrap;}
+.q-btn:hover{background:#0284c7;}
+.q-chips{margin-top:12px;display:flex;flex-wrap:wrap;gap:7px;}
+.chip{padding:4px 11px;border-radius:20px;background:rgba(255,255,255,.1);color:#cbd5e1;font-size:.76rem;cursor:pointer;border:1px solid rgba(255,255,255,.14);}
+.chip:hover{background:rgba(255,255,255,.2);color:#fff;}
+
+/* QUERY RESULT */
+.qresult{background:var(--card);border-radius:11px;box-shadow:0 2px 10px rgba(0,0,0,.09);overflow:hidden;margin-bottom:20px;}
+.qr-hdr{background:#eff6ff;border-bottom:1px solid #bfdbfe;padding:13px 18px;display:flex;align-items:center;justify-content:space-between;}
+.qr-ttl{font-size:.88rem;font-weight:700;color:var(--nav2);}
+.qr-cnt{font-size:.78rem;color:var(--muted);}
+.qr-sum{padding:14px 18px;background:#fafbff;border-bottom:1px solid var(--border);}
+.sum-grid{display:flex;gap:22px;flex-wrap:wrap;}
+.sum-item{font-size:.83rem;}
+.sum-item strong{color:var(--nav2);font-size:1rem;}
+.no-res{text-align:center;padding:38px;color:var(--muted);}
+.no-res-ic{font-size:2.4rem;margin-bottom:8px;}
+
+/* MODAL */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;}
+.modal-ov.open{display:flex;}
+.modal{background:#fff;border-radius:13px;padding:26px;max-width:680px;width:95vw;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.modal-ttl{font-size:1.05rem;font-weight:700;color:var(--nav2);}
+.modal-x{background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--muted);}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mf-lbl{font-size:.67rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:2px;}
+.mf-val{font-size:.86rem;color:var(--text);font-weight:500;}
+.ms{margin-top:14px;padding-top:12px;border-top:1px solid var(--border);}
+.ms-ttl{font-size:.75rem;font-weight:700;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+
+/* RESULT SECTION LABEL */
+.rsec-lbl{font-size:.82rem;font-weight:700;color:var(--nav2);margin:0 0 10px;padding:14px 18px 0;}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-l">
+    <div class="hdr-icon">🚢</div>
+    <div>
+      <h1>Dashboard Embarques 2026</h1>
+      <div class="hdr-sub">Plataforma de Gestión y Consulta · <span id="totalBadge"></span></div>
+    </div>
+  </div>
+  <div class="hdr-r">
+    <div id="hdrDate"></div>
+    <div style="margin-top:4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <span id="syncStatus" style="font-size:.73rem;color:#94a3b8;">⏳ Cargando datos...</span>
+    <button id="syncBtn" onclick="loadFromSheets()" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#e2e8f0;font-size:.7rem;padding:2px 9px;border-radius:5px;cursor:pointer;">↻ Actualizar</button>
+  </div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab on" onclick="goTab('resumen')" id="t-resumen">📊 Resumen</button>
+  <button class="tab" onclick="goTab('consulta')" id="t-consulta">🔍 Consulta</button>
+  <button class="tab" onclick="goTab('embarques')" id="t-embarques">📦 Embarques</button>
+  <button class="tab" onclick="goTab('gastos')" id="t-gastos">💰 Gastos & Fletes</button>
+</div>
+
+<div class="main">
+
+<!-- ===== RESUMEN ===== -->
+<div class="panel on" id="p-resumen">
+  <div class="kpis" id="kpiGrid"></div>
+  <div class="cgrid">
+    <div class="card"><div class="card-ttl">📈 Embarques por Cliente</div><div class="bc" id="cCli"></div></div>
+    <div class="card"><div class="card-ttl">📅 Embarques por Mes</div><div class="bc" id="cMes"></div></div>
+    <div class="card"><div class="card-ttl">🏷️ Estado de Embarques</div><div class="donut-wrap" id="cEst"></div></div>
+    <div class="card"><div class="card-ttl">🐟 Productos Exportados</div><div class="bc" id="cProd"></div></div>
+  </div>
+  <div class="sbox">
+    <div class="sbox-hdr">
+      <div class="sbox-ttl">⚠️ Embarques con Saldo Pendiente</div>
+      <span id="pendCnt" style="font-size:.78rem;color:var(--muted);"></span>
+    </div>
+    <div class="sbox-body">
+      <div class="twrap scroll"><table>
+        <thead><tr><th>PI</th><th>Fecha Carga</th><th>Cliente</th><th>Producto</th><th>Total Venta</th><th>Total Pagado</th><th>Saldo</th><th>Estado</th><th>Ver</th></tr></thead>
+        <tbody id="pendTable"></tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CONSULTA ===== -->
+<div class="panel" id="p-consulta">
+  <div class="qpanel">
+    <div class="q-ttl">🔍 Consulta Inteligente</div>
+    <div class="q-sub">Escribe tu consulta en lenguaje natural. Detecta clientes, meses, rangos de fechas, agentes y tipos de información.</div>
+    <div class="q-row">
+      <input class="q-input" id="qInput" placeholder="Ej: estado de todas las proformas de marzo de Haerang..." onkeydown="if(event.key==='Enter')runQuery()">
+      <button class="q-btn" onclick="runQuery()">🔍 Consultar</button>
+    </div>
+    <div class="q-chips">
+      <span style="font-size:.73rem;color:#64748b;align-self:center;">Ejemplos:</span>
+      <div class="chip" onclick="setQ(this.textContent)">proformas de marzo de Haerang</div>
+      <div class="chip" onclick="setQ(this.textContent)">gastos de SUFLENORSA en febrero</div>
+      <div class="chip" onclick="setQ(this.textContent)">embarques pendientes de pago de Roman Seafood</div>
+      <div class="chip" onclick="setQ(this.textContent)">todo de Smartsea en abril</div>
+      <div class="chip" onclick="setQ(this.textContent)">fletes por pagar de NOVA</div>
+      <div class="chip" onclick="setQ(this.textContent)">saldos pendientes de todos los clientes</div>
+      <div class="chip" onclick="setQ(this.textContent)">por embarcar</div>
+      <div class="chip" onclick="setQ(this.textContent)">gastos de TARGET en marzo</div>
+    </div>
+  </div>
+  <div id="qResults"></div>
+</div>
+
+<!-- ===== EMBARQUES ===== -->
+<div class="panel" id="p-embarques">
+  <div class="sbox">
+    <div class="sbox-hdr">
+      <div class="sbox-ttl">📦 Registro de Embarques 2026</div>
+      <div class="filters">
+        <div class="fg"><label>Cliente</label><select id="fCli" onchange="renderEmb()"><option value="">Todos</option></select></div>
+        <div class="fg"><label>Estado</label><select id="fEst" onchange="renderEmb()"><option value="">Todos</option></select></div>
+        <div class="fg"><label>Pago</label>
+          <select id="fPago" onchange="renderEmb()">
+            <option value="">Todos</option><option value="ok">Al día</option><option value="pend">Con saldo</option>
+          </select>
+        </div>
+        <div class="fg"><label>Desde</label><input type="date" id="fDesde" onchange="renderEmb()"></div>
+        <div class="fg"><label>Hasta</label><input type="date" id="fHasta" onchange="renderEmb()"></div>
+        <div class="fg"><label>Buscar</label><input type="text" id="fSearch" placeholder="PI, producto..." oninput="renderEmb()" style="width:140px;"></div>
+        <button class="btn btn-s" onclick="clearFE()">✕ Limpiar</button>
+      </div>
+    </div>
+    <div class="sbox-body">
+      <div class="twrap scroll">
+        <table>
+          <thead><tr>
+            <th>PI</th><th>Fecha Carga</th><th>Cliente</th><th>Producto</th>
+            <th>Kilos</th><th>Precio</th><th>Total Venta</th>
+            <th>Estado</th><th>Forma Pago</th><th>Total Pagado</th><th>Saldo</th><th>Ver</th>
+          </tr></thead>
+          <tbody id="embTable"></tbody>
+        </table>
+      </div>
+      <div class="pag" id="embPag"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== GASTOS ===== -->
+<div class="panel" id="p-gastos">
+  <div class="sbox">
+    <div class="sbox-hdr">
+      <div class="sbox-ttl">💰 Gastos & Fletes por Embarque</div>
+      <div class="filters">
+        <div class="fg"><label>Cliente</label><select id="fGCli" onchange="renderGastos()"><option value="">Todos</option></select></div>
+        <div class="fg"><label>Ag. Marítimo</label><select id="fGAgm" onchange="renderGastos()"><option value="">Todos</option></select></div>
+        <div class="fg"><label>Ag. Aduana</label><select id="fGAga" onchange="renderGastos()"><option value="">Todos</option></select></div>
+        <div class="fg"><label>Buscar PI</label><input type="text" id="fGSearch" placeholder="PI..." oninput="renderGastos()" style="width:80px;"></div>
+        <button class="btn btn-s" onclick="clearFG()">✕ Limpiar</button>
+      </div>
+    </div>
+    <div class="sbox-body">
+      <div class="twrap scroll">
+        <table>
+          <thead><tr>
+            <th>PI</th><th>Cliente</th><th>Producto</th>
+            <th>Ag. Marítimo</th><th>Val. Flete USD</th><th>Fact. Flete</th><th>Fecha Pago Flete</th>
+            <th>Ag. Terrestre</th><th>Fact. Ter</th><th>Monto Flete Ter</th><th>Fecha Pago Ter</th>
+            <th>Ag. Aduana</th><th>Nota Cobro</th><th>Monto Aduana</th><th>Fecha Pago Nota</th>
+            <th>Ag. Extra</th><th>Fact. Extra</th><th>Monto Extra</th><th>Banco Extra</th>
+            <th>Ver</th>
+          </tr></thead>
+          <tbody id="gastosTable"></tbody>
+        </table>
+      </div>
+      <div class="pag" id="gastosPag"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- MODAL -->
+<div class="modal-ov" id="mOv" onclick="closeMod(event)">
+  <div class="modal" id="mContent"></div>
+</div>
+
+<script>
+// ============================================================
+// GOOGLE SHEETS EN VIVO
+// ============================================================
+const SHEET_ID="1XUAET4SsoTgYU6HWsTaCvMidKFgSwMDNB1-4Pgt4ktc";
+const SHEET_EMBARQUES="EMBARQUES 2026";
+const CLIENT_NORM={"OVERSEA ATLANTIC FISH SL":"OVERSEA","HAPSA SAMAC-OVERSEA":"OVERSEA","HAPSA SAMAC -OVERSEA":"OVERSEA","SMARTSEA SAC":"SMARTSEA","SMARTSEA (DAIRECK)":"SMARTSEA","WOFCO":"WORLDWIDE FISHING","ROMAN":"ROMAN SEAFOOD","VIDELA":"PESCADOS VIDELA","PESCADOS VIDELA SPA":"PESCADOS VIDELA","GULF FOODS (ALTAI)":"GULF FOODS","GULF FOODS (YAMATOSHI)":"GULF FOODS","SMITH":"SMITH TRADING"};
+function normClient(c){if(!c)return c;const u=c.trim().toUpperCase();return CLIENT_NORM[u]||u;}
+const DB_FALLBACK=[{"PI":971,"FX":1675.0,"GD":3459.0,"FECHA_CARGA":"2026-01-27","ESTADO":"EMBARCADO","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"JUREL 300-500","KILOS_NETOS":26000.0,"PRECIO":1.5,"TOTAL_VENTA":39000,"FORMA_PAGO":"30/70","ANTICIPO":11700.0,"FECHA_ANTICIPO":"2026-01-27","ABONO1":27300.0,"FECHA_ABONO1":"2026-02-24","TOTAL_PAGADO":39000.0,"SALDOS":0.0,"FULL_SET":"B","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":5437.0,"FACTURA_FLETE":9516.0,"FECHA_PAGO_FLETE":"2026-03-04","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10003,"MONTO_FLETE_TER":1596147.0,"FECHA_PAGO_TER":"2026-03-08","AGENTE_ADUANA":"TARGET","NOTA_COBRO":9900.0,"MONTO_ADUANA":566170.0,"FECHA_PAGO_NOTA":"2026-03-08"},{"PI":972,"FX":1662.0,"GD":3424.0,"FECHA_CARGA":"2026-01-12","ESTADO":"EMBARCADO","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"JUREL 500-900","KILOS_NETOS":26000.0,"PRECIO":1.5,"TOTAL_VENTA":39000,"FORMA_PAGO":"30/70","ANTICIPO":11700.0,"FECHA_ANTICIPO":"2026-01-12","ABONO1":27300.0,"FECHA_ABONO1":"2026-02-24","TOTAL_PAGADO":39000.0,"SALDOS":0.0,"FULL_SET":"OK","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":5437.0,"FACTURA_FLETE":9462.0,"FECHA_PAGO_FLETE":"2026-03-04","AGENTE_TER":"SUFLENORSA","FACTURA_TER":9962,"MONTO_FLETE_TER":216878.0,"FECHA_PAGO_TER":"2026-03-08","AGENTE_ADUANA":"TARGET","NOTA_COBRO":9744.0,"MONTO_ADUANA":571402.0,"FECHA_PAGO_NOTA":"2026-03-08","AGENTE_EXTRA":"JLG","FACT_EXTRA":711.0,"MONTO_EXTRA":1404200.0,"FECHA_PAGO_EXTRA":"2026-03-08","BANCO_EXTRA":"ITAU"},{"PI":973,"FX":1664.0,"GD":3426.0,"FECHA_CARGA":"2026-01-12","ESTADO":"EMBARCADO","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"JUREL 900-UP","KILOS_NETOS":25500.0,"PRECIO":1.5,"TOTAL_VENTA":38250,"FORMA_PAGO":"30/70","ANTICIPO":11475.0,"FECHA_ANTICIPO":"2026-01-12","ABONO1":26775.0,"FECHA_ABONO1":"2026-02-24","TOTAL_PAGADO":38250.0,"SALDOS":0.0,"FULL_SET":"OK","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":5437.0,"FACTURA_FLETE":9460.0,"FECHA_PAGO_FLETE":"2026-03-04","AGENTE_TER":"SUFLENORSA","FACTURA_TER":9960,"MONTO_FLETE_TER":216878.0,"FECHA_PAGO_TER":"2026-03-08","AGENTE_ADUANA":"TARGET","NOTA_COBRO":9745.0,"MONTO_ADUANA":571187.0,"FECHA_PAGO_NOTA":"2026-03-08","AGENTE_EXTRA":"JLG","FACT_EXTRA":712.0,"MONTO_EXTRA":1404200.0,"FECHA_PAGO_EXTRA":"2026-03-08","BANCO_EXTRA":"ITAU"},{"PI":"974-1","FX":1672.0,"GD":3447.0,"FECHA_CARGA":"2026-01-23","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.7,"TOTAL_VENTA":45900,"FORMA_PAGO":"30/70","ANTICIPO":13770.0,"FECHA_ANTICIPO":"2025-01-27","ABONO1":543.51,"FECHA_ABONO1":"2026-02-10","ABONO2":31586.49,"FECHA_ABONO2":"2026-02-12","TOTAL_PAGADO":45900.0,"SALDOS":0.0,"FULL_SET":"OK","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1700.0,"FACTURA_FLETE":9500.0,"FECHA_PAGO_FLETE":"2026-03-04","AGENTE_TER":"SUFLENORSA","FACTURA_TER":9987,"MONTO_FLETE_TER":1841844.0,"FECHA_PAGO_TER":"2026-03-08","AGENTE_ADUANA":"TARGET","NOTA_COBRO":9693.0,"MONTO_ADUANA":481681.0,"FECHA_PAGO_NOTA":"2026-03-08"},{"PI":"974-2","FX":1673.0,"GD":3448.0,"FECHA_CARGA":"2026-01-23","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.7,"TOTAL_VENTA":45900,"FORMA_PAGO":"30/70","ANTICIPO":13770.0,"FECHA_ANTICIPO":"2026-01-27","ABONO2":32130.0,"FECHA_ABONO2":"2026-02-12","TOTAL_PAGADO":45900.0,"SALDOS":0.0,"FULL_SET":"OK","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1700.0,"FACTURA_FLETE":9501.0,"FECHA_PAGO_FLETE":"2026-03-04","AGENTE_TER":"SUFLENORSA","FACTURA_TER":9988,"MONTO_FLETE_TER":1841844.0,"FECHA_PAGO_TER":"2026-03-08","AGENTE_ADUANA":"TARGET","NOTA_COBRO":9694.0,"MONTO_ADUANA":481681.0,"FECHA_PAGO_NOTA":"2026-03-08"},{"PI":975,"FX":1674.0,"GD":3449.0,"FECHA_CARGA":"2026-01-23","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.7,"TOTAL_VENTA":45900,"FORMA_PAGO":"30/70","ANTICIPO":13770.0,"FECHA_ANTICIPO":"2026-01-27","ABONO1":32130.0,"FECHA_ABONO1":"2026-03-03","TOTAL_PAGADO":45900.0,"SALDOS":0.0,"FULL_SET":"OK","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1700.0,"FACTURA_FLETE":9502.0,"FECHA_PAGO_FLETE":"2026-03-04","AGENTE_TER":"SUFLENORSA","FACTURA_TER":9989,"MONTO_FLETE_TER":1841844.0,"FECHA_PAGO_TER":"2026-03-08","AGENTE_ADUANA":"TARGET","NOTA_COBRO":9766.0,"MONTO_ADUANA":481681.0,"FECHA_PAGO_NOTA":"2026-03-08"},{"PI":976,"FX":1677.0,"GD":3473.0,"FECHA_CARGA":"2026-02-03","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"CABALLA 300-500/500-900/900-UP","KILOS_NETOS":26000.0,"PRECIO":1.4,"TOTAL_VENTA":36400,"FORMA_PAGO":"30/70","ANTICIPO":10920.0,"FECHA_ANTICIPO":"2026-02-02","ABONO1":25480.0,"FECHA_ABONO1":"2026-02-10","TOTAL_PAGADO":36400.0,"SALDOS":0.0,"BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":3132.0,"FACTURA_FLETE":9569.0,"FECHA_PAGO_FLETE":"2026-03-04","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10049,"MONTO_FLETE_TER":1852034.0,"FECHA_PAGO_TER":"2026-03-08","AGENTE_ADUANA":"TARGET","NOTA_COBRO":9743.0,"MONTO_ADUANA":483209.0,"FECHA_PAGO_NOTA":"2026-03-08"},{"PI":"977-1","FX":1711.0,"GD":3539.0,"FECHA_CARGA":"2026-03-04","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"JUREL 300-500/500-900/900-UP","KILOS_NETOS":26000.0,"PRECIO":1.5,"TOTAL_VENTA":39000,"FORMA_PAGO":"30/70","ANTICIPO":11700.0,"FECHA_ANTICIPO":"2026-03-02","ABONO1":27300.0,"FECHA_ABONO1":"2026-03-24","TOTAL_PAGADO":39000.0,"SALDOS":0.0,"FULL_SET":"ok 23-03","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":5918.0,"FACTURA_FLETE":9773.0,"FECHA_PAGO_FLETE":"2026-03-23","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10229,"MONTO_FLETE_TER":1631847.0,"FECHA_PAGO_TER":"2026-03-22","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10097.0,"MONTO_ADUANA":572454.0,"FECHA_PAGO_NOTA":"30-03-2026"},{"PI":"977-2","ESTADO":"POR EMBARCAR","CLIENTE":"SMARTSEA","PRODUCTO":"JUREL 300-500/500-900/900-UP","KILOS_NETOS":26000.0,"PRECIO":1.5,"TOTAL_VENTA":39000,"FORMA_PAGO":"30/70","FECHA_ANTICIPO":"2026-03-02","TOTAL_PAGADO":0.0,"SALDOS":-39000.0,"BANCO":"BCI"},{"PI":978,"FX":1658.0,"GD":3399.0,"FECHA_CARGA":"PI 959-1","ESTADO":"REDIRECCIONADO","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.6,"TOTAL_VENTA":43200,"FORMA_PAGO":"30/70","ANTICIPO":12960.0,"FECHA_ANTICIPO":"2026-01-13","ABONO2":30240.0,"FECHA_ABONO2":"2026-02-12","TOTAL_PAGADO":43200.0,"SALDOS":0.0,"FULL_SET":"OK","BANCO":"BCI","AGENTE_MAR":"NOVA","VALOR_FLETE":4052.0,"FACTURA_FLETE":185.0,"FECHA_PAGO_FLETE":"2026-02-26","AGENTE_TER":"JLG","FACTURA_TER":705,"MONTO_FLETE_TER":184450.0,"FECHA_PAGO_TER":"26-02-2026","AGENTE_ADUANA":"JLG","NOTA_COBRO":688.0,"MONTO_ADUANA":1673449.0,"FECHA_PAGO_NOTA":"26-02-2026","AGENTE_EXTRA":"TARGET","FACT_EXTRA":9689.0,"MONTO_EXTRA":1026373.0,"FECHA_PAGO_EXTRA":"26-02-2026","BANCO_EXTRA":"ITAU"},{"PI":"979-1","FX":1669.0,"GD":3440.0,"FECHA_CARGA":"2026-01-19","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":1.8,"TOTAL_VENTA":43200,"FORMA_PAGO":"30/70","ANTICIPO":11460.0,"FECHA_ANTICIPO":"2026-01-20","ABONO1":26740.0,"FECHA_ABONO1":"2026-02-13","TOTAL_PAGADO":38200.0,"SALDOS":-5000.0,"BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9470.0,"FECHA_PAGO_FLETE":"26-02-2026","AGENTE_TER":"SUFLENORSA","FACTURA_TER":9973,"MONTO_FLETE_TER":1659392.0,"FECHA_PAGO_TER":"26-02-2026","AGENTE_ADUANA":"TARGET","NOTA_COBRO":9646.0,"MONTO_ADUANA":387135.0,"FECHA_PAGO_NOTA":"26-02-2026","AGENTE_EXTRA":"TARGET","FACT_EXTRA":9978.0,"MONTO_EXTRA":47600.0,"FECHA_PAGO_EXTRA":"24-03-2026","BANCO_EXTRA":"ITAU"},{"PI":"979-2","FX":1670.0,"GD":3441.0,"FECHA_CARGA":"2026-01-19","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":1.8,"TOTAL_VENTA":43200,"FORMA_PAGO":"30/70","ANTICIPO":11460.0,"FECHA_ANTICIPO":"2026-01-20","ABONO1":26740.0,"FECHA_ABONO1":"2026-02-13","TOTAL_PAGADO":38200.0,"SALDOS":-5000.0,"BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9469.0,"FECHA_PAGO_FLETE":"26-02-2026","AGENTE_TER":"SUFLENORSA","FACTURA_TER":9972,"MONTO_FLETE_TER":1659392.0,"FECHA_PAGO_TER":"26-02-2026","AGENTE_ADUANA":"TARGET","NOTA_COBRO":9648.0,"MONTO_ADUANA":508290.0,"FECHA_PAGO_NOTA":"26-02-2026","AGENTE_EXTRA":"TARGET","FACT_EXTRA":9976.0,"MONTO_EXTRA":47600.0,"FECHA_PAGO_EXTRA":"24-03-2026","BANCO_EXTRA":"ITAU"},{"PI":"979-3","FX":1671.0,"GD":3442.0,"FECHA_CARGA":"2026-01-19","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":1.8,"TOTAL_VENTA":43200,"FORMA_PAGO":"30/70","ANTICIPO":11460.0,"FECHA_ANTICIPO":"2026-01-20","ABONO1":26740.0,"FECHA_ABONO1":"2026-02-13","TOTAL_PAGADO":38200.0,"SALDOS":-5000.0,"BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9471.0,"FECHA_PAGO_FLETE":"26-02-2026","AGENTE_TER":"SUFLENORSA","FACTURA_TER":9974,"MONTO_FLETE_TER":1659392.0,"FECHA_PAGO_TER":"26-02-2026","AGENTE_ADUANA":"TARGET","NOTA_COBRO":9647.0,"MONTO_ADUANA":387135.0,"FECHA_PAGO_NOTA":"26-02-2026","AGENTE_EXTRA":"TARGET","FACT_EXTRA":9977.0,"MONTO_EXTRA":47600.0,"FECHA_PAGO_EXTRA":"24-03-2026","BANCO_EXTRA":"ITAU"},{"PI":"980-1","FX":1641.0,"GD":3349.0,"FECHA_CARGA":"PI 957-1","ESTADO":"REDIRECCIONADO","CLIENTE":"OVERSEA","PRODUCTO":"FILETE","KILOS_NETOS":26000.0,"PRECIO":1.6,"TOTAL_VENTA":41600,"FORMA_PAGO":"cad","TOTAL_PAGADO":0.0,"SALDOS":-41600.0,"BANCO":"BCI","AGENTE_MAR":"PATAGONIA"},{"PI":"980-2","FX":1642.0,"GD":3352.0,"FECHA_CARGA":"PI 957-2","ESTADO":"REDIRECCIONADO","CLIENTE":"OVERSEA","PRODUCTO":"FILETE","KILOS_NETOS":26000.0,"PRECIO":1.6,"TOTAL_VENTA":41600,"FORMA_PAGO":"cad","TOTAL_PAGADO":0.0,"SALDOS":-41600.0,"BANCO":"BCI","AGENTE_MAR":"PATAGONIA"},{"PI":"981-1","FX":1667.0,"GD":3438.0,"FECHA_CARGA":"2026-01-19","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.4875,"TOTAL_VENTA":35700,"FORMA_PAGO":"L/C","ANTICIPO":35700.0,"FECHA_ANTICIPO":"2026-03-03","TOTAL_PAGADO":35700.0,"SALDOS":0.0,"BANCO":"SANTANDER","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9472.0,"FECHA_PAGO_FLETE":"26-02-2026","AGENTE_TER":"SUFLENORSA","FACTURA_TER":9975,"MONTO_FLETE_TER":1659392.0,"FECHA_PAGO_TER":"26-02-2026","AGENTE_ADUANA":"TARGET","NOTA_COBRO":9645.0,"MONTO_ADUANA":387135.0,"FECHA_PAGO_NOTA":"26-02-2026","AGENTE_EXTRA":"TARGET","FACT_EXTRA":9979.0,"MONTO_EXTRA":47600.0,"FECHA_PAGO_EXTRA":"2026-03-24","BANCO_EXTRA":"ITAU"},{"PI":"981-2","FX":1668.0,"GD":3439.0,"FECHA_CARGA":"2026-01-20","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.4875,"TOTAL_VENTA":35700,"FORMA_PAGO":"L/C","ANTICIPO":35700.0,"FECHA_ANTICIPO":"2026-03-03","TOTAL_PAGADO":35700.0,"SALDOS":0.0,"BANCO":"SANTANDER","AGENTE_MAR":"NOVA","VALOR_FLETE":1700.0,"FACTURA_FLETE":187.0,"FECHA_PAGO_FLETE":"26-02-2026","AGENTE_TER":"JLG","FACTURA_TER":721,"MONTO_FLETE_TER":1907635.0,"FECHA_PAGO_TER":"26-02-2026","AGENTE_ADUANA":"TARGET","NOTA_COBRO":9649.0,"MONTO_ADUANA":387135.0,"FECHA_PAGO_NOTA":"26-02-2026","AGENTE_EXTRA":"TARGET","FACT_EXTRA":9975.0,"MONTO_EXTRA":47600.0,"FECHA_PAGO_EXTRA":"24-03-2026","BANCO_EXTRA":"ITAU"},{"PI":"981-3","FX":1681.0,"GD":3488.0,"FECHA_CARGA":"2026-02-08","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":1.7,"TOTAL_VENTA":40800,"FORMA_PAGO":"L/C","ANTICIPO":40800.0,"FECHA_ANTICIPO":"2026-03-17","TOTAL_PAGADO":40800.0,"SALDOS":0.0,"BANCO":"SANTANDER","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9586.0,"FECHA_PAGO_FLETE":"2026-03-04","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10067,"MONTO_FLETE_TER":1659448.0,"FECHA_PAGO_TER":"2026-03-08","AGENTE_ADUANA":"TARGET","NOTA_COBRO":9854.0,"MONTO_ADUANA":432980.0,"FECHA_PAGO_NOTA":"2026-03-08"},{"PI":"981-4","FX":1682.0,"GD":3489.0,"FECHA_CARGA":"2026-02-08","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":1.7,"TOTAL_VENTA":40800,"FORMA_PAGO":"L/C","ANTICIPO":40800.0,"FECHA_ANTICIPO":"2026-03-19","TOTAL_PAGADO":40800.0,"SALDOS":0.0,"BANCO":"SANTANDER","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9587.0,"FECHA_PAGO_FLETE":"2026-03-04","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10068,"MONTO_FLETE_TER":1659448.0,"FECHA_PAGO_TER":"2026-03-08","AGENTE_ADUANA":"TARGET","NOTA_COBRO":9855.0,"MONTO_ADUANA":549329.0,"FECHA_PAGO_NOTA":"2026-03-08"},{"PI":"981-5","FX":1683.0,"GD":3500.0,"FECHA_CARGA":"2026-02-10","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":1.7,"TOTAL_VENTA":40800,"FORMA_PAGO":"L/C","ANTICIPO":40800.0,"FECHA_ANTICIPO":"2026-03-27","TOTAL_PAGADO":40800.0,"SALDOS":0.0,"BANCO":"SANTANDER","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9579.0,"FECHA_PAGO_FLETE":"2026-03-04","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10060,"MONTO_FLETE_TER":1659448.0,"FECHA_PAGO_TER":"2026-03-08","AGENTE_ADUANA":"TARGET","NOTA_COBRO":9853.0,"MONTO_ADUANA":432979.0,"FECHA_PAGO_NOTA":"2026-03-08"},{"PI":982,"FX":1651.0,"FECHA_CARGA":"PI 959-3","ESTADO":"REDIRECCIONADO","CLIENTE":"PESCAMERICA","PRODUCTO":"TENTACULOS","KILOS_NETOS":27000.0,"PRECIO":1.9,"TOTAL_VENTA":51300,"FORMA_PAGO":"30/70","ANTICIPO":15390.0,"FECHA_ANTICIPO":"2026-02-02","ABONO1":35910.0,"FECHA_ABONO1":"2026-02-23","TOTAL_PAGADO":51300.0,"SALDOS":0.0,"FULL_SET":"B","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1156.0,"FACTURA_FLETE":9443.0,"FECHA_PAGO_FLETE":"2026-03-09","AGENTE_TER":"SUFLENORSA","FACTURA_TER":9949,"MONTO_FLETE_TER":257635.0,"FECHA_PAGO_TER":"2026-03-08","AGENTE_ADUANA":"TARGET","NOTA_COBRO":9905.0,"MONTO_ADUANA":198953.0,"FECHA_PAGO_NOTA":"2026-03-08"},{"PI":983,"FX":1679.0,"GD":3475.0,"FECHA_CARGA":"2026-02-06","ESTADO":"EMBARCADO","CLIENTE":"ALSEMAR","PRODUCTO":"TENTACULOS","KILOS_NETOS":25000.0,"PRECIO":2.2,"TOTAL_VENTA":55000.00000000001,"FORMA_PAGO":"30/70","ANTICIPO":16500.0,"FECHA_ANTICIPO":"2026-02-09","ABONO1":38500.0,"FECHA_ABONO1":"2026-03-05","TOTAL_PAGADO":55000.0,"SALDOS":0.0,"FULL_SET":"0k","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":4404.0,"FACTURA_FLETE":9604.0,"FECHA_PAGO_FLETE":"2026-03-23","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10083,"MONTO_FLETE_TER":1750860.0,"FECHA_PAGO_TER":"2026-03-22","AGENTE_ADUANA":"TARGET","NOTA_COBRO":9949.0,"MONTO_ADUANA":743322.0,"FECHA_PAGO_NOTA":"2026-03-22"},{"PI":984,"FX":1680.0,"GD":3476.0,"FECHA_CARGA":"2026-02-06","ESTADO":"EMBARCADO","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"TENTACULOS","KILOS_NETOS":25000.0,"PRECIO":2.2,"TOTAL_VENTA":55000.00000000001,"FORMA_PAGO":"30/70","ANTICIPO":16500.0,"FECHA_ANTICIPO":"2026-02-10","ABONO1":38500.0,"FECHA_ABONO1":"2026-03-09","TOTAL_PAGADO":55000.0,"SALDOS":0.0,"FULL_SET":"ok","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":4404.0,"FACTURA_FLETE":9603.0,"FECHA_PAGO_FLETE":"2026-03-23","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10082,"MONTO_FLETE_TER":1750860.0,"FECHA_PAGO_TER":"2026-03-22","AGENTE_ADUANA":"TARGET","NOTA_COBRO":9948.0,"MONTO_ADUANA":743322.0,"FECHA_PAGO_NOTA":"2026-03-22"},{"PI":985,"FX":1696.0,"GD":3512.0,"FECHA_CARGA":"2026-02-13","ESTADO":"EMBARCADO","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"TENTACULOS","KILOS_NETOS":24000.0,"PRECIO":2.2,"TOTAL_VENTA":52800.00000000001,"FORMA_PAGO":"30/70","ANTICIPO":15840.0,"FECHA_ANTICIPO":"2026-02-10","ABONO1":36960.0,"FECHA_ABONO1":"2026-03-11","TOTAL_PAGADO":52800.0,"SALDOS":0.0,"FULL_SET":"ok","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":4404.0,"FACTURA_FLETE":9637.0,"FECHA_PAGO_FLETE":"2026-03-23","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10112,"MONTO_FLETE_TER":1749225.0,"FECHA_PAGO_TER":"2026-03-22","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10001.0,"MONTO_ADUANA":814623.0,"FECHA_PAGO_NOTA":"2026-03-22"},{"PI":986,"FX":1685.0,"GD":3496.0,"FECHA_CARGA":"2026-02-08","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":26000.0,"PRECIO":1.7,"TOTAL_VENTA":44200,"FORMA_PAGO":"30/70","ANTICIPO":13260.0,"FECHA_ANTICIPO":"2026-01-27","ABONO1":30940.0,"FECHA_ABONO1":"2026-03-16","TOTAL_PAGADO":44200.0,"SALDOS":0.0,"FULL_SET":"ok","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":2000.0,"FACTURA_FLETE":9581.0,"FECHA_PAGO_FLETE":"2026-03-23","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10062,"MONTO_FLETE_TER":1659448.0,"FECHA_PAGO_TER":"2026-03-22","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10005.0,"MONTO_ADUANA":445025.0,"FECHA_PAGO_NOTA":"2026-03-22"},{"PI":"987-1","ESTADO":"ANULADA","CLIENTE":"PESCAMERICA","PRODUCTO":"FILETE","KILOS_NETOS":26000.0,"PRECIO":1.7,"TOTAL_VENTA":44200,"FORMA_PAGO":"30/70","TOTAL_PAGADO":0.0,"SALDOS":-44200.0,"BANCO":"BCI"},{"PI":"987-2","ESTADO":"ANULADA","CLIENTE":"PESCAMERICA","PRODUCTO":"FILETE","KILOS_NETOS":26000.0,"PRECIO":1.7,"TOTAL_VENTA":44200,"FORMA_PAGO":"30/70","TOTAL_PAGADO":0.0,"SALDOS":-44200.0,"BANCO":"BCI"},{"PI":988,"FX":1678.0,"GD":3472.0,"FECHA_CARGA":"2026-02-02","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.7,"TOTAL_VENTA":40800,"FORMA_PAGO":"30/70","ANTICIPO":12240.0,"FECHA_ANTICIPO":"2026-02-02","ABONO1":28560.0,"FECHA_ABONO1":"2026-02-24","TOTAL_PAGADO":40800.0,"SALDOS":0.0,"BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9568.0,"FECHA_PAGO_FLETE":"2026-03-04","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10048,"MONTO_FLETE_TER":1660331.0,"FECHA_PAGO_TER":"2026-03-08","AGENTE_ADUANA":"TARGET","NOTA_COBRO":9746.0,"MONTO_ADUANA":433284.0,"FECHA_PAGO_NOTA":"2026-03-08"},{"PI":989,"ESTADO":"ANULADA","CLIENTE":"SMARTSEA","PRODUCTO":"ALETA","KILOS_NETOS":26000.0,"PRECIO":1.8,"TOTAL_VENTA":46800,"FORMA_PAGO":"30/70","FECHA_ANTICIPO":"ANULADA","FECHA_ABONO2":"ANULADA","TOTAL_PAGADO":0.0,"SALDOS":-46800.0,"BANCO":"BCI"},{"PI":"990-1","FX":1699.0,"GD":3527.0,"FECHA_CARGA":"2026-02-17","ESTADO":"EMBARCADO","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"JUREL","KILOS_NETOS":24000.0,"PRECIO":1.4,"TOTAL_VENTA":33600,"FORMA_PAGO":"30/70","ANTICIPO":33600.0,"FECHA_ANTICIPO":"2026-03-26","CAMBIO_BL":350.0,"TOTAL_PAGADO":33950.0,"SALDOS":350.0,"BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":5551.0,"FACTURA_FLETE":9648.0,"FECHA_PAGO_FLETE":"2026-03-23","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10123,"MONTO_FLETE_TER":1635060.0,"FECHA_PAGO_TER":"2026-03-22","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10100.0,"MONTO_ADUANA":486976.0,"FECHA_PAGO_NOTA":"30-03-2026"},{"PI":"990-2","FX":1700.0,"GD":3528.0,"FECHA_CARGA":"2026-02-17","ESTADO":"EMBARCADO","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"JUREL","KILOS_NETOS":24000.0,"PRECIO":1.4,"TOTAL_VENTA":33600,"FORMA_PAGO":"30/70","ANTICIPO":33600.0,"FECHA_ANTICIPO":"2026-03-26","TOTAL_PAGADO":33600.0,"SALDOS":0.0,"BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":5551.0,"FACTURA_FLETE":9649.0,"FECHA_PAGO_FLETE":"2026-03-23","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10124,"MONTO_FLETE_TER":1635060.0,"FECHA_PAGO_TER":"2026-03-22","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10101.0,"MONTO_ADUANA":486976.0,"FECHA_PAGO_NOTA":"30-03-2026"},{"PI":"990-3","FX":1702.0,"GD":3529.0,"FECHA_CARGA":"2026-02-18","ESTADO":"EMBARCADO","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"JUREL","KILOS_NETOS":24000.0,"PRECIO":1.4,"TOTAL_VENTA":33600,"FORMA_PAGO":"30/70","ANTICIPO":33600.0,"FECHA_ANTICIPO":"2026-03-26","TOTAL_PAGADO":33600.0,"SALDOS":0.0,"BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":5551.0,"FACTURA_FLETE":9650.0,"FECHA_PAGO_FLETE":"2026-03-23","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10125,"MONTO_FLETE_TER":1635060.0,"FECHA_PAGO_TER":"2026-03-22","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10107.0,"MONTO_ADUANA":486976.0,"FECHA_PAGO_NOTA":"30-03-2026"},{"PI":"991-1","FX":1686.0,"GD":3484.0,"FECHA_CARGA":"2026-02-09","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"CABEZA","KILOS_NETOS":27000.0,"PRECIO":0.8,"TOTAL_VENTA":21600,"FORMA_PAGO":"30/70","ANTICIPO":6297.6,"FECHA_ANTICIPO":"2026-02-04","ABONO1":15482.4,"FECHA_ABONO1":"2026-03-24","TOTAL_PAGADO":21780.0,"SALDOS":180.0,"FULL_SET":"OK 23-06","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":2300.0,"FACTURA_FLETE":9582.0,"FECHA_PAGO_FLETE":"2026-03-23","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10063,"MONTO_FLETE_TER":1842708.0,"FECHA_PAGO_TER":"2026-03-22","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10096.0,"MONTO_ADUANA":562520.0,"FECHA_PAGO_NOTA":"30-03-2026"},{"PI":"991-2","FX":1687.0,"GD":3485.0,"FECHA_CARGA":"2026-02-09","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"CABEZA","KILOS_NETOS":27000.0,"PRECIO":0.8,"TOTAL_VENTA":21600,"FORMA_PAGO":"30/70","ANTICIPO":6297.6,"FECHA_ANTICIPO":"2026-02-04","ABONO1":15482.4,"FECHA_ABONO1":"2026-03-24","TOTAL_PAGADO":21780.0,"SALDOS":180.0,"FULL_SET":"OK 23-06","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":2300.0,"FACTURA_FLETE":9584.0,"FECHA_PAGO_FLETE":"2026-03-23","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10065,"MONTO_FLETE_TER":1842708.0,"FECHA_PAGO_TER":"2026-03-22","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10098.0,"MONTO_ADUANA":445925.0,"FECHA_PAGO_NOTA":"30-03-2026"},{"PI":"991-3","FX":1689.0,"GD":3486.0,"FECHA_CARGA":"2026-02-09","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"CABEZA","KILOS_NETOS":26000.0,"PRECIO":0.8,"TOTAL_VENTA":20800,"FORMA_PAGO":"30/70","ANTICIPO":6297.6,"FECHA_ANTICIPO":"2026-02-04","ABONO1":14682.4,"FECHA_ABONO1":"2026-03-24","TOTAL_PAGADO":20980.0,"SALDOS":180.0,"FULL_SET":"OK 23-06","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":2300.0,"FACTURA_FLETE":9585.0,"FECHA_PAGO_FLETE":"2026-03-23","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10066,"MONTO_FLETE_TER":1842708.0,"FECHA_PAGO_TER":"2026-03-22","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10102.0,"MONTO_ADUANA":445925.0,"FECHA_PAGO_NOTA":"30-03-2026"},{"PI":992,"TOTAL_VENTA":0,"TOTAL_PAGADO":0.0,"SALDOS":0.0},{"PI":993,"ESTADO":"ANULADA","CLIENTE":"SMARTSEA","PRODUCTO":"CABALLA","KILOS_NETOS":25000.0,"PRECIO":1.4,"TOTAL_VENTA":35000,"FORMA_PAGO":"30/70","FECHA_ANTICIPO":"2026-03-03","FECHA_ABONO2":"ANULADA","TOTAL_PAGADO":0.0,"SALDOS":-35000.0,"BANCO":"BCI"},{"PI":994,"GD":3567.0,"FECHA_CARGA":"2026-03-18","ESTADO":"EMBARCADO","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"DESPUNTE DE JIBIA","KILOS_NETOS":25900.0,"PRECIO":1.0,"TOTAL_VENTA":25900,"FORMA_PAGO":"30/70","ANTICIPO":8512.5,"FECHA_ANTICIPO":"2026-03-17","TOTAL_PAGADO":8512.5,"SALDOS":-17387.5,"BANCO":"BCI","AGENTE_MAR":"MEGACARRIER","VALOR_FLETE":4840.0,"FACTURA_FLETE":10678.0,"FECHA_PAGO_FLETE":"31-03-2026","AGENTE_TER":"MEGACARRIER","FACTURA_TER":21006,"MONTO_FLETE_TER":1666000.0},{"PI":994,"GD":3567.0,"FECHA_CARGA":"2026-03-18","ESTADO":"EMBARCADO","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"REPRODUCTOR","KILOS_NETOS":1100.0,"PRECIO":2.25,"TOTAL_VENTA":2475,"FORMA_PAGO":"30/70","TOTAL_PAGADO":0.0,"SALDOS":-2475.0},{"PI":995,"FX":1692.0,"GD":3499.0,"FECHA_CARGA":"2026-02-13","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.675,"TOTAL_VENTA":45225,"FORMA_PAGO":"30/70","ANTICIPO":13567.5,"FECHA_ANTICIPO":"2026-02-10","ABONO1":31657.5,"FECHA_ABONO1":"2025-03-23","TOTAL_PAGADO":45225.0,"SALDOS":0.0,"FULL_SET":"ok","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":2000.0,"FACTURA_FLETE":9636.0,"FECHA_PAGO_FLETE":"2026-03-23","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10111,"MONTO_FLETE_TER":1841688.0,"FECHA_PAGO_TER":"2026-03-22","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10043.0,"MONTO_ADUANA":554053.0,"FECHA_PAGO_NOTA":"2026-03-22"},{"PI":996,"FX":1710.0,"GD":3538.0,"FECHA_CARGA":"2026-03-04","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"JUREL","KILOS_NETOS":26000.0,"PRECIO":1.5,"TOTAL_VENTA":39000,"FORMA_PAGO":"30/70","ANTICIPO":11700.0,"FECHA_ANTICIPO":"2026-03-03","ABONO1":27300.0,"FECHA_ABONO1":"2026-04-01","CAMBIO_BL":240.0,"TOTAL_PAGADO":39240.0,"SALDOS":240.0,"FULL_SET":"B","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":5418.0,"FACTURA_FLETE":9774.0,"FECHA_PAGO_FLETE":"2026-03-23","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10230,"MONTO_FLETE_TER":1631847.0,"FECHA_PAGO_TER":"2026-03-22","AGENTE_ADUANA":"SUFLENORSA","NOTA_COBRO":10291.0,"MONTO_ADUANA":257635.0,"FECHA_PAGO_NOTA":"2026-04-13","AGENTE_EXTRA":"TARGET","FACT_EXTRA":10169.0,"MONTO_EXTRA":572454.0,"FECHA_PAGO_EXTRA":"2026-04-13","BANCO_EXTRA":"ITAU"},{"PI":997,"ESTADO":"POR EMBARCAR","CLIENTE":"SMARTSEA","PRODUCTO":"JUREL","KILOS_NETOS":26000.0,"PRECIO":1.5,"TOTAL_VENTA":39000,"FORMA_PAGO":"30/70","FECHA_ANTICIPO":"2026-03-03","TOTAL_PAGADO":0.0,"SALDOS":-39000.0,"BANCO":"BCI"},{"PI":998,"FX":1697.0,"GD":3517.0,"FECHA_CARGA":"2026-02-16","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.6,"TOTAL_VENTA":38400,"FORMA_PAGO":"30/70","ANTICIPO":11520.0,"FECHA_ANTICIPO":"2026-03-03","ABONO1":26880.0,"FECHA_ABONO1":"2026-03-24","TOTAL_PAGADO":38400.0,"SALDOS":0.0,"FULL_SET":"B","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9647.0,"FECHA_PAGO_FLETE":"2026-03-23","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10122,"MONTO_FLETE_TER":1658428.0,"FECHA_PAGO_TER":"2026-03-22","AGENTE_ADUANA":"TARGET","NOTA_COBRO":9902.0,"MONTO_ADUANA":433396.0,"FECHA_PAGO_NOTA":"2026-03-22"},{"PI":"999-1","FX":1693.0,"GD":3509.0,"FECHA_CARGA":"2026-02-15","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.5,"TOTAL_VENTA":40500,"FORMA_PAGO":"30/70","ANTICIPO":12150.0,"FECHA_ANTICIPO":"2026-02-10","ABONO1":28350.0,"FECHA_ABONO1":"2026-03-18","TOTAL_PAGADO":40500.0,"SALDOS":0.0,"FULL_SET":"B","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1700.0,"FACTURA_FLETE":9640.0,"FECHA_PAGO_FLETE":"2026-03-23","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10115,"MONTO_FLETE_TER":1841688.0,"FECHA_PAGO_TER":"2026-03-22","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10006.0,"MONTO_ADUANA":513937.0,"FECHA_PAGO_NOTA":"2026-03-22"},{"PI":"999-2","FX":1694.0,"GD":3510.0,"FECHA_CARGA":"2026-02-15","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.5,"TOTAL_VENTA":40500,"FORMA_PAGO":"30/70","ANTICIPO":12150.0,"FECHA_ANTICIPO":"2026-02-10","ABONO1":28350.0,"FECHA_ABONO1":"2026-03-18","TOTAL_PAGADO":40500.0,"SALDOS":0.0,"FULL_SET":"b","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1700.0,"FACTURA_FLETE":9642.0,"FECHA_PAGO_FLETE":"2026-03-23","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10118,"MONTO_FLETE_TER":1841688.0,"FECHA_PAGO_TER":"2026-03-22","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10002.0,"MONTO_ADUANA":513937.0,"FECHA_PAGO_NOTA":"2026-03-22"},{"PI":"999-3","FX":1705.0,"GD":3520.0,"FECHA_CARGA":"2026-02-22","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.5,"TOTAL_VENTA":40500,"FORMA_PAGO":"30/70","ANTICIPO":12150.0,"FECHA_ANTICIPO":"2026-02-10","ABONO1":28350.0,"FECHA_ABONO1":"2026-03-24","TOTAL_PAGADO":40500.0,"SALDOS":0.0,"FULL_SET":"PB","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1700.0,"FACTURA_FLETE":9714.0,"FECHA_PAGO_FLETE":"31-03-2026","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10163,"MONTO_FLETE_TER":1842459.0,"FECHA_PAGO_TER":"30-03-2026","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10099.0,"MONTO_ADUANA":632851.0,"FECHA_PAGO_NOTA":"30-03-2026"},{"PI":"1000-1","FX":1695.0,"GD":3511.0,"FECHA_CARGA":"2026-02-15","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":22080.0,"PRECIO":1.6,"TOTAL_VENTA":35328,"FORMA_PAGO":"30/70","ANTICIPO":12960.0,"FECHA_ANTICIPO":"2026-02-10","ABONO1":22368.0,"FECHA_ABONO1":"2026-03-18","TOTAL_PAGADO":35328.0,"SALDOS":0.0,"FULL_SET":"b","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1700.0,"FACTURA_FLETE":9638.0,"FECHA_PAGO_FLETE":"2026-03-23","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10113,"MONTO_FLETE_TER":1841688.0,"FECHA_PAGO_TER":"2026-03-22","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10003.0,"MONTO_ADUANA":442962.0,"FECHA_PAGO_NOTA":"2026-03-22","AGENTE_EXTRA":"TARGET","FACT_EXTRA":10109.0,"MONTO_EXTRA":72327.0,"FECHA_PAGO_EXTRA":"30-03-2026","BANCO_EXTRA":"ITAU"},{"PI":"1000-1","FX":1695.0,"GD":3511.0,"FECHA_CARGA":"2026-02-15","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":4920.0,"PRECIO":1.5,"TOTAL_VENTA":7380,"FORMA_PAGO":"30/70","ABONO1":7380.0,"FECHA_ABONO1":"2026-03-18","TOTAL_PAGADO":7380.0,"SALDOS":0.0},{"PI":"1000-2","GD":3568.0,"FECHA_CARGA":"2026-03-17","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.5,"TOTAL_VENTA":40500,"FORMA_PAGO":"30/70","ANTICIPO":12150.0,"FECHA_ANTICIPO":"2026-02-10","ABONO1":10500.0,"FECHA_ABONO1":"2026-04-09","ABONO2":11700.0,"FECHA_ABONO2":"2026-04-09","TOTAL_PAGADO":34350.0,"SALDOS":-6150.0,"BANCO":"BCI"},{"PI":1001,"FX":1684.0,"GD":3504.0,"FECHA_CARGA":"2026-02-10","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.675,"TOTAL_VENTA":45225,"FORMA_PAGO":"30/70","ANTICIPO":13567.5,"FECHA_ANTICIPO":"2026-02-10","ABONO1":31657.5,"FECHA_ABONO1":"2026-03-16","TOTAL_PAGADO":45225.0,"SALDOS":0.0,"FULL_SET":"ok","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":2000.0,"FACTURA_FLETE":9580.0,"FECHA_PAGO_FLETE":"2026-03-23","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10061,"MONTO_FLETE_TER":1659448.0,"FECHA_PAGO_TER":"2026-03-22","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10004.0,"MONTO_ADUANA":445924.0,"FECHA_PAGO_NOTA":"2026-03-22"},{"PI":"1002-1","FX":1703.0,"GD":3524.0,"FECHA_CARGA":"2026-02-18","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"ALETA","KILOS_NETOS":26985.0,"PRECIO":1.3,"TOTAL_VENTA":35080.5,"FORMA_PAGO":"30/70","ANTICIPO":10524.15,"FECHA_ANTICIPO":"2026-02-10","ABONO1":24556.35,"FECHA_ABONO1":"2026-04-01","TOTAL_PAGADO":35080.5,"SALDOS":0.0,"FULL_SET":"f 31-3","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":2200.0,"FACTURA_FLETE":9651.0,"FECHA_PAGO_FLETE":"2026-03-23","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10126,"MONTO_FLETE_TER":1658428.0,"FECHA_PAGO_TER":"2026-03-22","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10157.0,"MONTO_ADUANA":480967.0,"FECHA_PAGO_NOTA":"2026-04-13"},{"PI":"1002-2","FX":1704.0,"GD":3525.0,"FECHA_CARGA":"2026-02-19","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"ALETA","KILOS_NETOS":27006.0,"PRECIO":1.3,"TOTAL_VENTA":35107.8,"FORMA_PAGO":"30/70","ANTICIPO":10532.34,"FECHA_ANTICIPO":"2026-02-20","ABONO1":24575.46,"FECHA_ABONO1":"2026-04-01","TOTAL_PAGADO":35107.8,"SALDOS":0.0,"FULL_SET":"f 31-3","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":2200.0,"FACTURA_FLETE":9652.0,"FECHA_PAGO_FLETE":"2026-03-23","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10127,"MONTO_FLETE_TER":1658428.0,"FECHA_PAGO_TER":"2026-03-22","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10156.0,"MONTO_ADUANA":481803.0,"FECHA_PAGO_NOTA":"2026-04-13"},{"PI":"1003-1","FX":1735.0,"GD":3569.0,"FECHA_CARGA":"2026-03-14","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"ALETA","KILOS_NETOS":27000.0,"PRECIO":1.3,"TOTAL_VENTA":35100,"FORMA_PAGO":"30/70","ANTICIPO":10530.0,"FECHA_ANTICIPO":"2026-03-18","TOTAL_PAGADO":10530.0,"SALDOS":-24570.0,"BANCO":"BCI"},{"PI":"1003-2","GD":3570.0,"FECHA_CARGA":"2026-03-14","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"ALETA","KILOS_NETOS":27000.0,"PRECIO":1.3,"TOTAL_VENTA":35100,"FORMA_PAGO":"30/70","ANTICIPO":10530.0,"FECHA_ANTICIPO":"2026-03-18","TOTAL_PAGADO":10530.0,"SALDOS":-24570.0,"BANCO":"BCI"},{"PI":1004,"FX":1690.0,"GD":3497.0,"FECHA_CARGA":"2026-02-10","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"JUREL","KILOS_NETOS":26000.0,"PRECIO":1.5,"TOTAL_VENTA":39000,"FORMA_PAGO":"30/70","ANTICIPO":11700.0,"FECHA_ANTICIPO":"2026-02-10","ABONO1":27300.0,"FECHA_ABONO1":"2026-03-12","TOTAL_PAGADO":39000.0,"SALDOS":0.0,"FULL_SET":"B","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":5400.0,"FACTURA_FLETE":9606.0,"FECHA_PAGO_FLETE":"31-03-2026","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10084,"MONTO_FLETE_TER":1631847.0,"FECHA_PAGO_TER":"30-03-2026","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10019.0,"MONTO_ADUANA":564796.0,"FECHA_PAGO_NOTA":"30-03-2026"},{"PI":1005,"FX":1707.0,"GD":3521.0,"FECHA_CARGA":"2026-02-20","ESTADO":"EMBARCADO","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"TENTACULOS 1000-UP","KILOS_NETOS":24000.0,"PRECIO":2.3,"TOTAL_VENTA":55199.99999999999,"FORMA_PAGO":"30/70","ANTICIPO":16560.0,"FECHA_ANTICIPO":"2026-03-05","ABONO1":38640.0,"FECHA_ABONO1":"2026-03-23","TOTAL_PAGADO":55200.0,"SALDOS":0.0,"FULL_SET":"0k 16-03","BANCO":"BCI","AGENTE_MAR":"PATAGONIA","VALOR_FLETE":3959.0,"FACTURA_FLETE":6835.0,"FECHA_PAGO_FLETE":"2026-03-23","AGENTE_TER":"PATAGONIA","FACTURA_TER":"14707-14604","MONTO_FLETE_TER":1660403.0,"FECHA_PAGO_TER":"2026-03-22","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10044.0,"MONTO_ADUANA":746584.0,"FECHA_PAGO_NOTA":"2026-03-22"},{"PI":1006,"FX":1709.0,"GD":3523.0,"FECHA_CARGA":"2026-02-27","ESTADO":"EMBARCADO","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"TENTACULOS","KILOS_NETOS":26000.0,"PRECIO":2.3,"TOTAL_VENTA":59799.99999999999,"FORMA_PAGO":"30/70","ANTICIPO":17940.0,"FECHA_ANTICIPO":"2026-02-20","ABONO1":41860.0,"FECHA_ABONO1":"2026-03-23","TOTAL_PAGADO":59800.0,"SALDOS":0.0,"BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":4438.0,"FACTURA_FLETE":9772.0,"FECHA_PAGO_FLETE":"31-03-2026","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10224,"MONTO_FLETE_TER":1794271.0,"FECHA_PAGO_TER":"30-03-2026","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10055.0,"MONTO_ADUANA":663601.0,"FECHA_PAGO_NOTA":"30-03-2026"},{"PI":1007,"FX":1708.0,"GD":3522.0,"FECHA_CARGA":"2026-02-20","ESTADO":"EMBARCADO","CLIENTE":"ALSEMAR","PRODUCTO":"TENTACULOS 1000-UP","KILOS_NETOS":24000.0,"PRECIO":2.3,"TOTAL_VENTA":55199.99999999999,"FORMA_PAGO":"30/70","ANTICIPO":16560.0,"FECHA_ANTICIPO":"2026-02-17","ABONO1":38640.0,"FECHA_ABONO1":"2026-03-24","TOTAL_PAGADO":55200.0,"SALDOS":0.0,"FULL_SET":"ok 16/03","BANCO":"BCI","AGENTE_MAR":"PATAGONIA","VALOR_FLETE":3959.0,"FACTURA_FLETE":6836.0,"FECHA_PAGO_FLETE":"2026-03-23","AGENTE_TER":"PATAGONIA","FACTURA_TER":"14710-14605","MONTO_FLETE_TER":1660403.0,"FECHA_PAGO_TER":"2026-03-22","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10047.0,"MONTO_ADUANA":746584.0,"FECHA_PAGO_NOTA":"2026-03-22"},{"PI":1008,"GD":3580.0,"FECHA_CARGA":"2026-03-16","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.65,"TOTAL_VENTA":39600,"FORMA_PAGO":"30/70","ANTICIPO":11880.0,"FECHA_ANTICIPO":"2026-03-17","ABONO1":27720.0,"FECHA_ABONO1":"2026-04-01","TOTAL_PAGADO":39600.0,"SALDOS":0.0,"BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9825.0,"FECHA_PAGO_FLETE":"2026-04-14","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10307,"MONTO_FLETE_TER":1671337.0,"FECHA_PAGO_TER":"2026-04-13","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10104.0,"MONTO_ADUANA":437211.0,"FECHA_PAGO_NOTA":"2026-04-13"},{"PI":1009,"GD":3602.0,"FECHA_CARGA":"2026-03-19","ESTADO":"EMBARCADO","CLIENTE":"ALSEMAR","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.6,"TOTAL_VENTA":43200,"FORMA_PAGO":"30/70","ANTICIPO":12960.0,"FECHA_ANTICIPO":"2026-03-17","TOTAL_PAGADO":12960.0,"SALDOS":-30240.0,"FULL_SET":"s/b","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":4730.0,"FACTURA_FLETE":9838.0,"FECHA_PAGO_FLETE":"2026-04-14","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10322,"MONTO_FLETE_TER":2101225.0,"FECHA_PAGO_TER":"2026-04-13","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10134.0,"MONTO_ADUANA":548358.0,"FECHA_PAGO_NOTA":"2026-04-13"},{"PI":1010,"GD":3628.0,"FECHA_CARGA":"2026-03-24","ESTADO":"EMBARCADO","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.6,"TOTAL_VENTA":43200,"FORMA_PAGO":"30/70","ANTICIPO":12960.0,"FECHA_ANTICIPO":"2026-03-25","TOTAL_PAGADO":12960.0,"SALDOS":-30240.0,"BANCO":"BCI"},{"PI":1011,"FECHA_CARGA":"ANULADA","ESTADO":"POR EMBARCAR","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"TENTACULOS","KILOS_NETOS":24000.0,"PRECIO":2.35,"TOTAL_VENTA":56400,"FORMA_PAGO":"30/70","FECHA_ABONO1":"ANULADA","FECHA_ABONO2":"ANULADA","TOTAL_PAGADO":0.0,"SALDOS":-56400.0,"BANCO":"BCI"},{"PI":"1012-1","GD":3555.0,"FECHA_CARGA":"2026-03-06","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.5375,"TOTAL_VENTA":36900,"FORMA_PAGO":"L/C","TOTAL_PAGADO":0.0,"SALDOS":-36900.0,"BANCO":"SANTANDER","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9804.0,"FECHA_PAGO_FLETE":"31-03-2026","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10273,"MONTO_FLETE_TER":1668468.0,"FECHA_PAGO_TER":"30-03-2026","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10060.0,"MONTO_ADUANA":558235.0,"FECHA_PAGO_NOTA":"30-03-2026"},{"PI":"1012-2","GD":3556.0,"FECHA_CARGA":"2026-03-07","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.5375,"TOTAL_VENTA":36900,"FORMA_PAGO":"L/C","TOTAL_PAGADO":0.0,"SALDOS":-36900.0,"BANCO":"SANTANDER","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9806.0,"FECHA_PAGO_FLETE":"31-03-2026","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10275,"MONTO_FLETE_TER":1668468.0,"FECHA_PAGO_TER":"1900-01-30","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10057.0,"MONTO_ADUANA":562059.0,"FECHA_PAGO_NOTA":"1900-01-30"},{"PI":"1012-3","GD":3557.0,"FECHA_CARGA":"2026-03-06","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.5375,"TOTAL_VENTA":36900,"FORMA_PAGO":"L/C","TOTAL_PAGADO":0.0,"SALDOS":-36900.0,"BANCO":"SANTANDER","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9805.0,"FECHA_PAGO_FLETE":"31-03-2026","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10274,"MONTO_FLETE_TER":1668468.0,"FECHA_PAGO_TER":"30-03-2026","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10059.0,"MONTO_ADUANA":558235.0,"FECHA_PAGO_NOTA":"30-03-2026"},{"PI":"1012-4","GD":3571.0,"FECHA_CARGA":"2026-03-15","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.5375,"TOTAL_VENTA":36900,"FORMA_PAGO":"L/C","TOTAL_PAGADO":0.0,"SALDOS":-36900.0,"BANCO":"SANTANDER","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9828.0,"FECHA_PAGO_FLETE":"2026-04-14","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10310,"MONTO_FLETE_TER":1671337.0,"FECHA_PAGO_TER":"2026-04-13","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10103.0,"MONTO_ADUANA":560471.0,"FECHA_PAGO_NOTA":"2026-04-13"},{"PI":"1012-5","GD":3572.0,"FECHA_CARGA":"2026-03-15","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.5375,"TOTAL_VENTA":36900,"FORMA_PAGO":"L/C","TOTAL_PAGADO":0.0,"SALDOS":-36900.0,"BANCO":"SANTANDER","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9829.0,"FECHA_PAGO_FLETE":"2026-04-14","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10311,"MONTO_FLETE_TER":1671337.0,"FECHA_PAGO_TER":"2026-04-13","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10090.0,"MONTO_ADUANA":436650.0,"FECHA_PAGO_NOTA":"2026-04-13"},{"PI":"1012-6","GD":3573.0,"FECHA_CARGA":"2026-03-15","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.5375,"TOTAL_VENTA":36900,"FORMA_PAGO":"L/C","TOTAL_PAGADO":0.0,"SALDOS":-36900.0,"BANCO":"SANTANDER","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9830.0,"FECHA_PAGO_FLETE":"2026-04-14","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10312,"MONTO_FLETE_TER":1671337.0,"FECHA_PAGO_TER":"2026-04-13","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10087.0,"MONTO_ADUANA":436650.0,"FECHA_PAGO_NOTA":"2026-04-13"},{"PI":"1012-7","FX":1713.0,"GD":3535.0,"FECHA_CARGA":"2026-03-02","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":1.4375,"TOTAL_VENTA":34500,"FORMA_PAGO":"L/C","TOTAL_PAGADO":0.0,"SALDOS":-34500.0,"BANCO":"SANTANDER","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9775.0,"FECHA_PAGO_FLETE":"2026-03-23","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10231,"MONTO_FLETE_TER":1667774.0,"FECHA_PAGO_TER":"2026-03-22","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10046.0,"MONTO_ADUANA":434218.0,"FECHA_PAGO_NOTA":"2026-03-22"},{"PI":"1012-8","FX":1712.0,"GD":3537.0,"FECHA_CARGA":"2026-03-02","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":1.4375,"TOTAL_VENTA":34500,"FORMA_PAGO":"L/C","TOTAL_PAGADO":0.0,"SALDOS":-34500.0,"BANCO":"SANTANDER","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9776.0,"FECHA_PAGO_FLETE":"2026-03-23","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10232,"MONTO_FLETE_TER":1667774.0,"FECHA_PAGO_TER":"2026-03-22","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10045.0,"MONTO_ADUANA":434218.0,"FECHA_PAGO_NOTA":"2026-03-22"},{"PI":"1012-9","GD":3558.0,"FECHA_CARGA":"2026-03-07","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":1.4375,"TOTAL_VENTA":34500,"FORMA_PAGO":"L/C","TOTAL_PAGADO":0.0,"SALDOS":-34500.0,"BANCO":"SANTANDER","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9807.0,"FECHA_PAGO_FLETE":"31-03-2026","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10276,"MONTO_FLETE_TER":1668468.0,"FECHA_PAGO_TER":"30-03-2026","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10058.0,"MONTO_ADUANA":562058.0,"FECHA_PAGO_NOTA":"30-03-2026"},{"PI":"1012-10","GD":3566.0,"FECHA_CARGA":"2026-03-13","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":1.4375,"TOTAL_VENTA":34500,"FORMA_PAGO":"L/C","TOTAL_PAGADO":0.0,"SALDOS":-34500.0,"BANCO":"SANTANDER","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9834.0,"FECHA_PAGO_FLETE":"2026-04-14","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10317,"MONTO_FLETE_TER":1671635.0,"FECHA_PAGO_TER":"2026-04-13","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10092.0,"MONTO_ADUANA":436650.0,"FECHA_PAGO_NOTA":"2026-04-13"},{"PI":"1013-1","FX":1714.0,"GD":3550.0,"FECHA_CARGA":"2026-03-10","ESTADO":"EMBARCADO","CLIENTE":"OVERSEA","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.4,"TOTAL_VENTA":37800,"FORMA_PAGO":"30/70","ANTICIPO":11340.0,"FECHA_ANTICIPO":"2026-03-17","TOTAL_PAGADO":11340.0,"SALDOS":-26460.0,"FULL_SET":"B 24-3","BANCO":"BCI","AGENTE_MAR":"MEGACARRIER","VALOR_FLETE":4590.0,"FACTURA_FLETE":10643.0,"FECHA_PAGO_FLETE":"31-03-2026","AGENTE_TER":"MEGACARRIER","FACTURA_TER":"20965-20956","MONTO_FLETE_TER":1564850.0,"FECHA_PAGO_TER":"30-03-2026","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10112.0,"MONTO_ADUANA":547930.0,"FECHA_PAGO_NOTA":"2026-04-13"},{"PI":"1013-2","FX":1715.0,"GD":3549.0,"FECHA_CARGA":"2026-03-10","ESTADO":"EMBARCADO","CLIENTE":"OVERSEA","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.4,"TOTAL_VENTA":37800,"FORMA_PAGO":"30/70","ANTICIPO":11340.0,"FECHA_ANTICIPO":"2026-03-17","TOTAL_PAGADO":11340.0,"SALDOS":-26460.0,"FULL_SET":"B 24-3","BANCO":"BCI","AGENTE_MAR":"MEGACARRIER","VALOR_FLETE":4590.0,"FACTURA_FLETE":10642.0,"FECHA_PAGO_FLETE":"31-03-2026","AGENTE_TER":"MEGACARRIER","FACTURA_TER":"20964-20957","MONTO_FLETE_TER":1564850.0,"FECHA_PAGO_TER":"30-03-2026","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10110.0,"MONTO_ADUANA":547930.0,"FECHA_PAGO_NOTA":"2026-04-13"},{"PI":"1014-1","FX":1721.0,"GD":3554.0,"FECHA_CARGA":"2026-03-13","ESTADO":"EMBARCADO","CLIENTE":"OVERSEA","PRODUCTO":"TENTACULOS","KILOS_NETOS":27000.0,"PRECIO":2.45,"TOTAL_VENTA":66150,"FORMA_PAGO":"30/70","ANTICIPO":19845.0,"FECHA_ANTICIPO":"2026-03-18","ABONO1":46305.0,"FECHA_ABONO1":"2026-04-13","TOTAL_PAGADO":66150.0,"SALDOS":0.0,"FULL_SET":"B 27-3","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":4438.0,"FACTURA_FLETE":9831.0,"FECHA_PAGO_FLETE":"2026-04-14","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10314,"MONTO_FLETE_TER":1798132.0,"FECHA_PAGO_TER":"2026-04-13","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10165.0,"MONTO_ADUANA":600501.0,"FECHA_PAGO_NOTA":"2026-04-13"},{"PI":"1014-2","FX":1716.0,"GD":3551.0,"FECHA_CARGA":"2026-03-11","ESTADO":"EMBARCADO","CLIENTE":"OVERSEA","PRODUCTO":"TENTACULOS","KILOS_NETOS":27000.0,"PRECIO":2.45,"TOTAL_VENTA":66150,"FORMA_PAGO":"30/70","ANTICIPO":19845.0,"FECHA_ANTICIPO":"2026-03-17","TOTAL_PAGADO":19845.0,"SALDOS":-46305.0,"FULL_SET":"B 24-3","BANCO":"BCI","AGENTE_MAR":"MEGACARRIER","VALOR_FLETE":4590.0,"FACTURA_FLETE":10644.0,"FECHA_PAGO_FLETE":"31-03-2026","AGENTE_TER":"MEGACARRIER","FACTURA_TER":"20966-20958","MONTO_FLETE_TER":1564850.0,"FECHA_PAGO_TER":"30-03-2026","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10111.0,"MONTO_ADUANA":545595.0,"FECHA_PAGO_NOTA":"2026-04-13"},{"PI":"1014-3","FX":1739.0,"GD":3565.0,"FECHA_CARGA":"2026-03-17","ESTADO":"EMBARCADO","CLIENTE":"OVERSEA","PRODUCTO":"TENTACULOS","KILOS_NETOS":21000.0,"PRECIO":2.45,"TOTAL_VENTA":51450.00000000001,"FORMA_PAGO":"30/70","ANTICIPO":20025.0,"FECHA_ANTICIPO":"2026-03-24","TOTAL_PAGADO":20025.0,"SALDOS":-31425.000000000007,"FULL_SET":"B 30-3","BANCO":"BCI","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":4730.0,"FACTURA_FLETE":9839.0,"FECHA_PAGO_FLETE":"2026-04-14","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10323,"MONTO_FLETE_TER":1858465.0,"FECHA_PAGO_TER":"2026-04-13","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10129.0,"MONTO_ADUANA":617997.0,"FECHA_PAGO_NOTA":"2026-04-13"},{"PI":"1014-3","FX":1739.0,"GD":3565.0,"FECHA_CARGA":"2026-03-17","ESTADO":"EMBARCADO","CLIENTE":"OVERSEA","PRODUCTO":"REPRODUCTOR","KILOS_NETOS":6000.0,"PRECIO":2.55,"TOTAL_VENTA":15299.999999999998,"FORMA_PAGO":"30/70","TOTAL_PAGADO":0.0,"SALDOS":-15299.999999999998,"BANCO":"BCI"},{"PI":1015,"ESTADO":"POR EMBARCAR","CLIENTE":"SMARTSEA","PRODUCTO":"ALETA","KILOS_NETOS":27000.0,"PRECIO":1.0,"TOTAL_VENTA":27000,"FORMA_PAGO":"30/70","ANTICIPO":8100.0,"FECHA_ANTICIPO":"2026-03-24","TOTAL_PAGADO":8100.0,"SALDOS":-18900.0,"BANCO":"BCI"},{"PI":1016,"GD":3581.0,"FECHA_CARGA":"2026-03-18","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.5,"TOTAL_VENTA":40500,"FORMA_PAGO":"30/70","ANTICIPO":12150.0,"FECHA_ANTICIPO":"2026-03-11","TOTAL_PAGADO":12150.0,"SALDOS":-28350.0,"BANCO":"BCI"},{"PI":1017,"GD":3639.0,"FECHA_CARGA":"2026-03-27","ESTADO":"EMBARCADO","CLIENTE":"FROXA","PRODUCTO":"FILETE","KILOS_NETOS":26000.0,"PRECIO":1.6,"TOTAL_VENTA":41600,"FORMA_PAGO":"30/70","ANTICIPO":12480.0,"FECHA_ANTICIPO":"2026-03-27","TOTAL_PAGADO":12480.0,"SALDOS":-29120.0,"BANCO":"BCI"},{"PI":"1018-1","GD":3589.0,"FECHA_CARGA":"2026-03-16","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.5474,"TOTAL_VENTA":37137.600000000006,"FORMA_PAGO":"LC","TOTAL_PAGADO":0.0,"SALDOS":-37137.600000000006,"BANCO":"SANTANDER","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9827.0,"FECHA_PAGO_FLETE":"2026-04-14","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10309,"MONTO_FLETE_TER":1742737.0,"FECHA_PAGO_TER":"2026-04-13","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10089.0,"MONTO_ADUANA":437211.0,"FECHA_PAGO_NOTA":"2026-04-13"},{"PI":"1018-2","GD":3606.0,"FECHA_CARGA":"2026-03-17","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.5474,"TOTAL_VENTA":37137.600000000006,"FORMA_PAGO":"LC","TOTAL_PAGADO":0.0,"SALDOS":-37137.600000000006,"BANCO":"SANTANDER","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9823.0,"FECHA_PAGO_FLETE":"2026-04-14","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10305,"MONTO_FLETE_TER":1828417.0,"FECHA_PAGO_TER":"2026-04-13","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10088.0,"MONTO_ADUANA":562723.0,"FECHA_PAGO_NOTA":"2026-04-13"},{"PI":"1018-3","GD":3605.0,"FECHA_CARGA":"2026-03-17","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.5474,"TOTAL_VENTA":37137.600000000006,"FORMA_PAGO":"LC","TOTAL_PAGADO":0.0,"SALDOS":-37137.600000000006,"BANCO":"SANTANDER","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9832.0,"FECHA_PAGO_FLETE":"2026-04-14","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10315,"MONTO_FLETE_TER":1750175.0,"FECHA_PAGO_TER":"2026-04-13","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10093.0,"MONTO_ADUANA":436919.0,"FECHA_PAGO_NOTA":"2026-04-13"},{"PI":"1018-4","GD":3622.0,"FECHA_CARGA":"2026-03-19","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.5474,"TOTAL_VENTA":37137.600000000006,"FORMA_PAGO":"LC","TOTAL_PAGADO":0.0,"SALDOS":-37137.600000000006,"BANCO":"SANTANDER","AGENTE_MAR":"MEGACARRIER","VALOR_FLETE":2095.0,"FACTURA_FLETE":10717.0,"FECHA_PAGO_FLETE":"2026-04-14","AGENTE_TER":"MEGACARRIER","FACTURA_TER":21042,"MONTO_FLETE_TER":1404200.0,"FECHA_PAGO_TER":"2026-04-13","AGENTE_ADUANA":"MEGACARRIER","NOTA_COBRO":21080.0,"MONTO_ADUANA":29631.0,"FECHA_PAGO_NOTA":"2026-04-13","AGENTE_EXTRA":"TARGET","FACT_EXTRA":10131.0,"MONTO_EXTRA":562921.0,"FECHA_PAGO_EXTRA":"2026-04-13","BANCO_EXTRA":"ITAU"},{"PI":"1018-5","GD":3623.0,"FECHA_CARGA":"2026-03-20","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.5474,"TOTAL_VENTA":37137.600000000006,"FORMA_PAGO":"LC","TOTAL_PAGADO":0.0,"SALDOS":-37137.600000000006,"BANCO":"SANTANDER","AGENTE_MAR":"EASYFRESH","VALOR_FLETE":2100.0,"FACTURA_FLETE":5972.0,"FECHA_PAGO_FLETE":"2026-04-14","AGENTE_TER":"EASYFRESH","FACTURA_TER":16146,"MONTO_FLETE_TER":1319710.0,"FECHA_PAGO_TER":"2026-04-13","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10105.0,"MONTO_ADUANA":477240.0,"FECHA_PAGO_NOTA":"2026-04-13"},{"PI":"1018-6","GD":3624.0,"FECHA_CARGA":"2026-03-20","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.5474,"TOTAL_VENTA":37137.600000000006,"FORMA_PAGO":"LC","TOTAL_PAGADO":0.0,"SALDOS":-37137.600000000006,"BANCO":"SANTANDER","AGENTE_MAR":"MEGACARRIER","VALOR_FLETE":2095.0,"FACTURA_FLETE":10708.0,"FECHA_PAGO_FLETE":"2026-04-14","AGENTE_TER":"MEGACARRIER","FACTURA_TER":21034,"MONTO_FLETE_TER":1493093.0,"FECHA_PAGO_TER":"2026-04-13","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10133.0,"MONTO_ADUANA":437603.0,"FECHA_PAGO_NOTA":"2026-04-13"},{"PI":"1018-7","GD":3620.0,"FECHA_CARGA":"2026-03-19","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.5474,"TOTAL_VENTA":37137.600000000006,"FORMA_PAGO":"LC","TOTAL_PAGADO":0.0,"SALDOS":-37137.600000000006,"BANCO":"SANTANDER","AGENTE_MAR":"MEGACARRIER","VALOR_FLETE":2095.0,"FACTURA_FLETE":10718.0,"FECHA_PAGO_FLETE":"2025-04-14","AGENTE_TER":"MEGACARRIER","FACTURA_TER":21043,"MONTO_FLETE_TER":1404200.0,"FECHA_PAGO_TER":"2026-04-13","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10135.0,"MONTO_ADUANA":437117.0,"FECHA_PAGO_NOTA":"2026-04-13"},{"PI":"1018-8","GD":3579.0,"FECHA_CARGA":"2026-03-16","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":1.4358,"TOTAL_VENTA":34459.2,"FORMA_PAGO":"LC","TOTAL_PAGADO":0.0,"SALDOS":-34459.2,"BANCO":"SANTANDER","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9824.0,"FECHA_PAGO_FLETE":"2026-04-14","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10306,"MONTO_FLETE_TER":1671337.0,"FECHA_PAGO_TER":"2026-04-13","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10086.0,"MONTO_ADUANA":560629.0,"FECHA_PAGO_NOTA":"2026-04-13"},{"PI":"1018-9","GD":3588.0,"FECHA_CARGA":"2026-03-16","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":1.4358,"TOTAL_VENTA":34459.2,"FORMA_PAGO":"LC","TOTAL_PAGADO":0.0,"SALDOS":-34459.2,"BANCO":"SANTANDER","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9826.0,"FECHA_PAGO_FLETE":"2026-04-14","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10308,"MONTO_FLETE_TER":1685617.0,"FECHA_PAGO_TER":"2026-04-13","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10095.0,"MONTO_ADUANA":437211.0,"FECHA_PAGO_NOTA":"2026-04-13"},{"PI":"1018-10","GD":3590.0,"FECHA_CARGA":"2026-03-16","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":1.4358,"TOTAL_VENTA":34459.2,"FORMA_PAGO":"LC","TOTAL_PAGADO":0.0,"SALDOS":-34459.2,"BANCO":"SANTANDER","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9835.0,"FECHA_PAGO_FLETE":"2026-04-14","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10318,"MONTO_FLETE_TER":1757315.0,"FECHA_PAGO_TER":"2026-04-13","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10094.0,"MONTO_ADUANA":437211.0,"FECHA_PAGO_NOTA":"2026-04-13"},{"PI":"1018-11","GD":3607.0,"FECHA_CARGA":"2026-03-17","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":1.4358,"TOTAL_VENTA":34459.2,"FORMA_PAGO":"LC","TOTAL_PAGADO":0.0,"SALDOS":-34459.2,"BANCO":"SANTANDER","AGENTE_MAR":"SUFLENORSA","VALOR_FLETE":1600.0,"FACTURA_FLETE":9833.0,"FECHA_PAGO_FLETE":"2026-04-14","AGENTE_TER":"SUFLENORSA","FACTURA_TER":10316,"MONTO_FLETE_TER":2007215.0,"FECHA_PAGO_TER":"2026-04-13","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10091.0,"MONTO_ADUANA":436919.0,"FECHA_PAGO_NOTA":"2026-04-13"},{"PI":1019,"FX":1740.0,"GD":3601.0,"FECHA_CARGA":"2026-03-18","ESTADO":"EMBARCADO","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"TENTACULOS","KILOS_NETOS":27000.0,"PRECIO":2.1,"TOTAL_VENTA":56700,"FORMA_PAGO":"30/70","ANTICIPO":17010.0,"FECHA_ANTICIPO":"2026-03-17","TOTAL_PAGADO":17010.0,"SALDOS":-39690.0,"FULL_SET":"B 30-03","BANCO":"BCI","AGENTE_MAR":"MEGACARRIER","VALOR_FLETE":4840.0,"FACTURA_FLETE":10679.0,"FECHA_PAGO_FLETE":"31-03-2026","AGENTE_TER":"MEGACARRIER","FACTURA_TER":21014,"MONTO_FLETE_TER":1659931.0,"FECHA_PAGO_TER":"30-03-2026"},{"PI":1020,"FX":1741.0,"GD":3603.0,"FECHA_CARGA":"2026-03-19","ESTADO":"EMBARCADO","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"TENTACULOS","KILOS_NETOS":27000.0,"PRECIO":2.1,"TOTAL_VENTA":56700,"FORMA_PAGO":"30/70","ANTICIPO":17010.0,"FECHA_ANTICIPO":"2026-03-17","TOTAL_PAGADO":17010.0,"SALDOS":-39690.0,"FULL_SET":"B 30-03","BANCO":"BCI","AGENTE_MAR":"MEGACARRIER","VALOR_FLETE":4840.0,"FACTURA_FLETE":10680.0,"FECHA_PAGO_FLETE":"31-03-2026","AGENTE_TER":"MEGACARRIER","FACTURA_TER":21007,"MONTO_FLETE_TER":1827840.0,"FECHA_PAGO_TER":"30-03-2026"},{"PI":1021,"GD":3608.0,"FECHA_CARGA":"2026-03-21","ESTADO":"EMBARCADO","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"TENTACULOS","KILOS_NETOS":12000.0,"PRECIO":2.1,"TOTAL_VENTA":25200,"FORMA_PAGO":"30/70","ANTICIPO":17685.0,"FECHA_ANTICIPO":"2026-03-17","TOTAL_PAGADO":17685.0,"SALDOS":-7515.0,"BANCO":"BCI"},{"PI":1021,"GD":3608.0,"FECHA_CARGA":"2026-03-21","ESTADO":"EMBARCADO","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"REPRODUCTOR","KILOS_NETOS":15000.0,"PRECIO":2.25,"TOTAL_VENTA":33750,"FORMA_PAGO":"30/70","TOTAL_PAGADO":0.0,"SALDOS":-33750.0,"BANCO":"BCI"},{"PI":1022,"ESTADO":"POR EMBARCAR","CLIENTE":"INTERATLANTIC","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.6,"TOTAL_VENTA":43200,"FORMA_PAGO":"CAD","TOTAL_PAGADO":0.0,"SALDOS":-43200.0,"BANCO":"SANTANDER"},{"PI":1023,"ESTADO":"POR EMBARCAR","CLIENTE":"INTERATLANTIC","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.6,"TOTAL_VENTA":43200,"FORMA_PAGO":"CAD","TOTAL_PAGADO":0.0,"SALDOS":-43200.0,"BANCO":"SANTANDER"},{"PI":1024,"ESTADO":"POR EMBARCAR","CLIENTE":"WORLDWIDE FISHING","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.6,"TOTAL_VENTA":43200,"FORMA_PAGO":"30/70","TOTAL_PAGADO":0.0,"SALDOS":-43200.0,"BANCO":"BCI"},{"PI":1025,"ESTADO":"POR EMBARCAR","CLIENTE":"WORLDWIDE FISHING","PRODUCTO":"REPRODUCTOR","KILOS_NETOS":27000.0,"PRECIO":2.4,"TOTAL_VENTA":64800,"FORMA_PAGO":"30/70","TOTAL_PAGADO":0.0,"SALDOS":-64800.0,"BANCO":"BCI"},{"PI":1026,"GD":3615.0,"FECHA_CARGA":"2026-03-23","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.45,"TOTAL_VENTA":39150,"FORMA_PAGO":"30/70","ANTICIPO":11745.0,"FECHA_ANTICIPO":"2026-03-24","TOTAL_PAGADO":11745.0,"SALDOS":-27405.0,"BANCO":"BCI"},{"PI":"1027-1","GD":3669.0,"FECHA_CARGA":"2026-04-06","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":1.6,"TOTAL_VENTA":38400,"FORMA_PAGO":"30/70","ANTICIPO":10800.0,"FECHA_ANTICIPO":"2026-03-24","ABONO1":270.0,"FECHA_ABONO1":"2026-03-12","TOTAL_PAGADO":11070.0,"SALDOS":-27330.0,"BANCO":"BCI"},{"PI":"1027-2","GD":3677.0,"FECHA_CARGA":"2026-04-06","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":1.6,"TOTAL_VENTA":38400,"FORMA_PAGO":"30/70","ANTICIPO":10800.0,"FECHA_ANTICIPO":"2026-03-24","TOTAL_PAGADO":10800.0,"SALDOS":-27600.0,"BANCO":"BCI"},{"PI":1028,"GD":3671.0,"FECHA_CARGA":"2026-04-08","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.7,"TOTAL_VENTA":45900,"FORMA_PAGO":"30/70","ANTICIPO":12960.0,"FECHA_ANTICIPO":"2026-03-24","TOTAL_PAGADO":12960.0,"SALDOS":-32940.0,"BANCO":"BCI"},{"PI":"1029-1","GD":3604.0,"FECHA_CARGA":"2026-03-20","ESTADO":"EMBARCADO","CLIENTE":"OVERSEA","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.45,"TOTAL_VENTA":39150,"FORMA_PAGO":"30/70","ANTICIPO":11745.0,"FECHA_ANTICIPO":"2026-03-24","TOTAL_PAGADO":11745.0,"SALDOS":-27405.0,"BANCO":"BCI"},{"PI":"1029-2","GD":3613.0,"FECHA_CARGA":"2026-03-21","ESTADO":"EMBARCADO","CLIENTE":"OVERSEA","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.45,"TOTAL_VENTA":39150,"FORMA_PAGO":"30/70","ANTICIPO":11745.0,"FECHA_ANTICIPO":"2026-03-24","TOTAL_PAGADO":11745.0,"SALDOS":-27405.0,"BANCO":"BCI"},{"PI":"1030-1","GD":3609.0,"FECHA_CARGA":"2026-03-20","ESTADO":"EMBARCADO","CLIENTE":"OVERSEA","PRODUCTO":"TENTACULO","KILOS_NETOS":27000.0,"PRECIO":2.35,"TOTAL_VENTA":63450,"FORMA_PAGO":"30/70","ANTICIPO":19035.0,"FECHA_ANTICIPO":"2026-03-24","TOTAL_PAGADO":19035.0,"SALDOS":-44415.0,"BANCO":"BCI"},{"PI":"1030-2","GD":3636.0,"FECHA_CARGA":"2026-03-27","ESTADO":"EMBARCADO","CLIENTE":"OVERSEA","PRODUCTO":"TENTACULO","KILOS_NETOS":27000.0,"PRECIO":2.35,"TOTAL_VENTA":63450,"FORMA_PAGO":"30/70","ANTICIPO":19035.0,"FECHA_ANTICIPO":"2026-03-24","TOTAL_PAGADO":19035.0,"SALDOS":-44415.0,"BANCO":"BCI"},{"PI":"1031-1","GD":3685.0,"FECHA_CARGA":"2026-04-13","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"ALETA","KILOS_NETOS":23000.0,"PRECIO":1.6,"TOTAL_VENTA":36800,"FORMA_PAGO":"30/70","ANTICIPO":10350.0,"FECHA_ANTICIPO":"2026-03-24","TOTAL_PAGADO":10350.0,"SALDOS":-26450.0,"BANCO":"BCI"},{"PI":"1031-2","GD":3686.0,"FECHA_CARGA":"2026-04-14","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"ALETA","KILOS_NETOS":23000.0,"PRECIO":1.6,"TOTAL_VENTA":36800,"FORMA_PAGO":"30/70","ANTICIPO":10350.0,"FECHA_ANTICIPO":"2026-03-24","TOTAL_PAGADO":10350.0,"SALDOS":-26450.0,"BANCO":"BCI"},{"PI":1032,"GD":3660.0,"FECHA_CARGA":"2026-03-31","ESTADO":"EMBARCADO","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"CABALLA","KILOS_NETOS":25000.0,"PRECIO":1.35,"TOTAL_VENTA":33750,"FORMA_PAGO":"C/DOC","TOTAL_PAGADO":0.0,"SALDOS":-33750.0,"BANCO":"BCI"},{"PI":1034,"ESTADO":"POR EMBARCAR","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.7,"TOTAL_VENTA":40800,"FORMA_PAGO":"30/70","ANTICIPO":12240.0,"FECHA_ANTICIPO":"2026-03-24","TOTAL_PAGADO":12240.0,"SALDOS":-28560.0,"BANCO":"BCI","AGENTE_MAR":"MEGACARRIER","VALOR_FLETE":2095.0,"FACTURA_FLETE":10710.0,"FECHA_PAGO_FLETE":"2026-04-14","AGENTE_TER":"MEGACARRIER","FACTURA_TER":21036,"MONTO_FLETE_TER":1404200.0,"FECHA_PAGO_TER":"2026-04-13","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10132.0,"MONTO_ADUANA":437603.0,"FECHA_PAGO_NOTA":"2026-04-13"},{"PI":1035,"ESTADO":"POR EMBARCAR","CLIENTE":"WORLDWIDE FISHING","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.6,"TOTAL_VENTA":43200,"FORMA_PAGO":"30/70","TOTAL_PAGADO":0.0,"SALDOS":-43200.0,"BANCO":"BCI"},{"PI":1036,"ESTADO":"POR EMBARCAR","CLIENTE":"WORLDWIDE FISHING","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.6,"TOTAL_VENTA":43200,"FORMA_PAGO":"30/70","TOTAL_PAGADO":0.0,"SALDOS":-43200.0,"BANCO":"BCI"},{"PI":1037,"ESTADO":"POR EMBARCAR","CLIENTE":"WORLDWIDE FISHING","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.6,"TOTAL_VENTA":43200,"FORMA_PAGO":"30/70","TOTAL_PAGADO":0.0,"SALDOS":-43200.0,"BANCO":"BCI"},{"PI":"1038-1","GD":3646.0,"FECHA_CARGA":"2026-03-25","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"CABEZA","KILOS_NETOS":27000.0,"PRECIO":0.5,"TOTAL_VENTA":13500,"FORMA_PAGO":"30/70","ANTICIPO":4050.0,"FECHA_ANTICIPO":"2026-03-24","TOTAL_PAGADO":4050.0,"SALDOS":-9450.0,"BANCO":"BCI"},{"PI":"1038-2","GD":3647.0,"FECHA_CARGA":"2026-03-25","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"CABEZA","KILOS_NETOS":27000.0,"PRECIO":0.5,"TOTAL_VENTA":13500,"FORMA_PAGO":"30/70","ANTICIPO":4050.0,"FECHA_ANTICIPO":"2026-03-24","TOTAL_PAGADO":4050.0,"SALDOS":-9450.0,"BANCO":"BCI"},{"PI":"1038-3","GD":3648.0,"FECHA_CARGA":"2026-03-25","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"CABEZA","KILOS_NETOS":27000.0,"PRECIO":0.5,"TOTAL_VENTA":13500,"FORMA_PAGO":"30/70","ANTICIPO":4050.0,"FECHA_ANTICIPO":"2026-03-24","TOTAL_PAGADO":4050.0,"SALDOS":-9450.0,"BANCO":"BCI"},{"PI":"1038-4","GD":3649.0,"FECHA_CARGA":"2026-03-25","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"CABEZA","KILOS_NETOS":27000.0,"PRECIO":0.5,"TOTAL_VENTA":13500,"FORMA_PAGO":"30/70","ANTICIPO":11310.0,"FECHA_ANTICIPO":"2026-03-24","TOTAL_PAGADO":11310.0,"SALDOS":-2190.0,"BANCO":"BCI"},{"PI":1039,"ESTADO":"ANULADA","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":26000.0,"PRECIO":1.45,"TOTAL_VENTA":37700,"FORMA_PAGO":"30/70","FECHA_ANTICIPO":"2026-03-24","TOTAL_PAGADO":0.0,"SALDOS":-37700.0,"BANCO":"BCI"},{"PI":"1040-1","GD":3650.0,"FECHA_CARGA":"2026-03-26","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.44375,"TOTAL_VENTA":34650,"FORMA_PAGO":"LC","TOTAL_PAGADO":0.0,"SALDOS":-34650.0,"BANCO":"SANTANDER"},{"PI":"1040-2","GD":3651.0,"FECHA_CARGA":"2026-03-26","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.44375,"TOTAL_VENTA":34650,"FORMA_PAGO":"LC","TOTAL_PAGADO":0.0,"SALDOS":-34650.0,"BANCO":"SANTANDER"},{"PI":"1040-3","GD":3659.0,"FECHA_CARGA":"2026-03-30","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.44375,"TOTAL_VENTA":34650,"FORMA_PAGO":"LC","TOTAL_PAGADO":0.0,"SALDOS":-34650.0,"BANCO":"SANTANDER"},{"PI":"1040-4","GD":3661.0,"FECHA_CARGA":"2026-03-30","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.44375,"TOTAL_VENTA":34650,"FORMA_PAGO":"LC","TOTAL_PAGADO":0.0,"SALDOS":-34650.0,"BANCO":"SANTANDER"},{"PI":"1040-11","GD":3629.0,"FECHA_CARGA":"2026-03-21","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":1.5,"TOTAL_VENTA":36000,"FORMA_PAGO":"LC","TOTAL_PAGADO":0.0,"SALDOS":-36000.0,"BANCO":"SANTANDER","AGENTE_MAR":"MEGACARRIER","VALOR_FLETE":2095.0,"FACTURA_FLETE":10712.0,"FECHA_PAGO_FLETE":"2026-04-14","AGENTE_TER":"MEGACARRIER","FACTURA_TER":21038,"MONTO_FLETE_TER":1449444.0,"FECHA_PAGO_TER":"2026-04-13","AGENTE_ADUANA":"TARGET","NOTA_COBRO":10106.0,"MONTO_ADUANA":477240.0,"FECHA_PAGO_NOTA":"2026-04-13"},{"PI":"1040-12","GD":3652.0,"FECHA_CARGA":"2026-03-27","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":1.5,"TOTAL_VENTA":36000,"FORMA_PAGO":"LC","TOTAL_PAGADO":0.0,"SALDOS":-36000.0,"BANCO":"SANTANDER"},{"PI":"1040-13","GD":3653.0,"FECHA_CARGA":"2026-03-27","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":1.5,"TOTAL_VENTA":36000,"FORMA_PAGO":"LC","TOTAL_PAGADO":0.0,"SALDOS":-36000.0,"BANCO":"SANTANDER"},{"PI":"1040-14","GD":3654.0,"FECHA_CARGA":"2026-03-27","ESTADO":"EMBARCADO","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":1.5,"TOTAL_VENTA":36000,"FORMA_PAGO":"LC","TOTAL_PAGADO":0.0,"SALDOS":-36000.0,"BANCO":"SANTANDER"},{"PI":1042,"ESTADO":"POR EMBARCAR","CLIENTE":"SMARTSEA","PRODUCTO":"ALETA","KILOS_NETOS":27000.0,"PRECIO":0.5,"TOTAL_VENTA":13500,"FORMA_PAGO":"30/70","ANTICIPO":4050.0,"FECHA_ANTICIPO":"2026-03-24","TOTAL_PAGADO":4050.0,"SALDOS":-9450.0,"BANCO":"BCI"},{"PI":1043,"GD":3643.0,"FECHA_CARGA":"2026-03-28","ESTADO":"EMBARCADO","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"FILETE","KILOS_NETOS":17000.0,"PRECIO":1.7,"TOTAL_VENTA":28900,"FORMA_PAGO":"30/70","ANTICIPO":8670.0,"FECHA_ANTICIPO":"2026-03-25","TOTAL_PAGADO":8670.0,"SALDOS":-20230.0,"BANCO":"BCI"},{"PI":1043,"GD":3643.0,"FECHA_CARGA":"2026-03-28","ESTADO":"EMBARCADO","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"REPRODUCTOR","KILOS_NETOS":10000.0,"PRECIO":2.5,"TOTAL_VENTA":25000,"FORMA_PAGO":"30/70","ANTICIPO":7500.0,"FECHA_ANTICIPO":"2026-03-25","TOTAL_PAGADO":7500.0,"SALDOS":-17500.0,"BANCO":"BCI"},{"PI":"1044-1","GD":3644.0,"FECHA_CARGA":"2026-03-27","ESTADO":"EMBARCADO","CLIENTE":"OVERSEA","PRODUCTO":"TENTACULOS","KILOS_NETOS":27000.0,"PRECIO":2.35,"TOTAL_VENTA":"ºº","FORMA_PAGO":"30/70","ANTICIPO":19035.0,"FECHA_ANTICIPO":"2026-04-01","TOTAL_PAGADO":19135.0,"BANCO":"BCI"},{"PI":"1044-2","GD":3645.0,"FECHA_CARGA":"2026-03-28","ESTADO":"EMBARCADO","CLIENTE":"OVERSEA","PRODUCTO":"TENTACULOS","KILOS_NETOS":27000.0,"PRECIO":2.35,"TOTAL_VENTA":63450,"FORMA_PAGO":"30/70","ANTICIPO":19035.0,"FECHA_ANTICIPO":"2026-04-01","TOTAL_PAGADO":19035.0,"SALDOS":-44415.0,"BANCO":"BCI"},{"PI":"1044-3","GD":3672.0,"FECHA_CARGA":"2026-04-10","ESTADO":"EMBARCADO","CLIENTE":"OVERSEA","PRODUCTO":"TENTACULOS","KILOS_NETOS":27000.0,"PRECIO":2.35,"TOTAL_VENTA":63450,"FORMA_PAGO":"30/70","ANTICIPO":10035.0,"FECHA_ANTICIPO":"2026-04-07","TOTAL_PAGADO":10035.0,"SALDOS":-53415.0,"BANCO":"BCI"},{"PI":"1044-4","ESTADO":"POR EMBARCAR","CLIENTE":"OVERSEA","PRODUCTO":"TENTACULOS","KILOS_NETOS":27000.0,"PRECIO":2.35,"TOTAL_VENTA":63450,"FORMA_PAGO":"30/70","ANTICIPO":19260.0,"FECHA_ANTICIPO":"2026-10-10","TOTAL_PAGADO":19260.0,"SALDOS":-44190.0,"BANCO":"BCI"},{"PI":1045,"GD":3670.0,"FECHA_CARGA":"2026-04-06","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.7,"TOTAL_VENTA":40800,"FORMA_PAGO":"30/70","ANTICIPO":11520.0,"FECHA_ANTICIPO":"2026-03-24","TOTAL_PAGADO":11520.0,"SALDOS":-29280.0,"BANCO":"BCI"},{"PI":"1046-1","GD":3675.0,"FECHA_CARGA":"2026-04-06","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.9,"TOTAL_VENTA":45600,"FORMA_PAGO":"30/70","ABONO1":27360.0,"FECHA_ABONO1":"2026-04-01","TOTAL_PAGADO":27360.0,"SALDOS":-18240.0,"BANCO":"BCI"},{"PI":"1046-2","GD":3679.0,"FECHA_CARGA":"2026-04-09","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.9,"TOTAL_VENTA":45600,"FORMA_PAGO":"30/70","TOTAL_PAGADO":0.0,"SALDOS":-45600.0,"BANCO":"BCI"},{"PI":"1047-1","GD":3683.0,"FECHA_CARGA":"2026-04-13","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.9,"TOTAL_VENTA":45600,"FORMA_PAGO":"30/70","ABONO1":24476.49,"FECHA_ABONO1":"2026-04-01","TOTAL_PAGADO":24476.49,"SALDOS":-21123.51,"BANCO":"BCI"},{"PI":"1047-2","GD":3684.0,"FECHA_CARGA":"2026-04-13","ESTADO":"EMBARCADO","CLIENTE":"SMARTSEA","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.9,"TOTAL_VENTA":45600,"FORMA_PAGO":"30/70","TOTAL_PAGADO":0.0,"SALDOS":-45600.0,"BANCO":"BCI"},{"PI":"1048-1","FECHA_CARGA":"ANULADA","ESTADO":"POR EMBARCAR","CLIENTE":"PESCADOS VIDELA","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.7,"TOTAL_VENTA":45900,"FORMA_PAGO":"60/40","TOTAL_PAGADO":0.0,"SALDOS":-45900.0,"BANCO":"BCI"},{"PI":"1048-2","FECHA_CARGA":"ANULADA","ESTADO":"POR EMBARCAR","CLIENTE":"PESCADOS VIDELA","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.7,"TOTAL_VENTA":45900,"FORMA_PAGO":"60/40","TOTAL_PAGADO":0.0,"SALDOS":-45900.0,"BANCO":"BCI"},{"PI":"1048-3","FECHA_CARGA":"ANULADA","ESTADO":"POR EMBARCAR","CLIENTE":"PESCADOS VIDELA","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.7,"TOTAL_VENTA":45900,"FORMA_PAGO":"60/40","TOTAL_PAGADO":100.0,"SALDOS":-45900.0,"BANCO":"BCI"},{"PI":"1048-4","FECHA_CARGA":"ANULADA","ESTADO":"POR EMBARCAR","CLIENTE":"PESCADOS VIDELA","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.7,"TOTAL_VENTA":45900,"FORMA_PAGO":"60/40","TOTAL_PAGADO":0.0,"SALDOS":-45900.0,"BANCO":"BCI"},{"PI":"1048-5","FECHA_CARGA":"ANULADA","ESTADO":"POR EMBARCAR","CLIENTE":"PESCADOS VIDELA","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.7,"TOTAL_VENTA":45900,"FORMA_PAGO":"60/40","TOTAL_PAGADO":0.0,"SALDOS":-45900.0,"BANCO":"BCI"},{"PI":1049,"KILOS_NETOS":27000.0,"PRECIO":1.9,"TOTAL_VENTA":51300,"FORMA_PAGO":"30/70","TOTAL_PAGADO":0.0,"SALDOS":-51300.0,"BANCO":"BCI"},{"PI":1050,"ESTADO":"POR EMBARCAR","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"TENTACULOS","KILOS_NETOS":27000.0,"PRECIO":2.4,"TOTAL_VENTA":64800,"FORMA_PAGO":"30/70","TOTAL_PAGADO":0.0,"SALDOS":-64800.0,"BANCO":"BCI"},{"PI":1051,"ESTADO":"POR EMBARCAR","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"TENTACULOS","KILOS_NETOS":17000.0,"PRECIO":2.35,"TOTAL_VENTA":39950,"FORMA_PAGO":"30/70","TOTAL_PAGADO":0.0,"SALDOS":-39950.0,"BANCO":"BCI"},{"PI":1051,"ESTADO":"POR EMBARCAR","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"REPRODUCTOR","KILOS_NETOS":10000.0,"PRECIO":2.5,"TOTAL_VENTA":25000,"FORMA_PAGO":"30/70","TOTAL_PAGADO":0.0,"SALDOS":-25000.0,"BANCO":"BCI"},{"PI":1052,"ESTADO":"POR EMBARCAR","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"FILETE","KILOS_NETOS":17000.0,"PRECIO":1.9,"TOTAL_VENTA":32300,"FORMA_PAGO":"30/70","TOTAL_PAGADO":0.0,"SALDOS":-32300.0,"BANCO":"BCI"},{"PI":1052,"ESTADO":"POR EMBARCAR","CLIENTE":"ROMAN SEAFOOD","PRODUCTO":"REPRODUCTOR","KILOS_NETOS":10000.0,"PRECIO":2.5,"TOTAL_VENTA":25000,"FORMA_PAGO":"30/70","TOTAL_PAGADO":0.0,"SALDOS":-25000.0,"BANCO":"BCI"},{"PI":1053,"GD":3642.0,"FECHA_CARGA":"2026-03-28","ESTADO":"EMBARCADO","CLIENTE":"OVERSEA","PRODUCTO":"FILETE","KILOS_NETOS":26000.0,"PRECIO":1.6,"TOTAL_VENTA":41600,"FORMA_PAGO":"30/70","ANTICIPO":12480.0,"FECHA_ANTICIPO":"2026-03-30","TOTAL_PAGADO":12480.0,"SALDOS":-29120.0,"BANCO":"BCI"},{"PI":"1054-1","GD":3688.0,"FECHA_CARGA":"2026-04-14","ESTADO":"EMBARCADO","CLIENTE":"IL POONG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.9,"TOTAL_VENTA":45600,"FORMA_PAGO":"30/70","ANTICIPO":41040.0,"FECHA_ANTICIPO":"2026-04-01","TOTAL_PAGADO":41040.0,"SALDOS":-4560.0,"BANCO":"SANTANDER"},{"PI":"1054-2","ESTADO":"POR EMBARCAR","CLIENTE":"IL POONG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.9,"TOTAL_VENTA":45600,"FORMA_PAGO":"30/70","TOTAL_PAGADO":0.0,"SALDOS":-45600.0,"BANCO":"SANTANDER"},{"PI":"1054-3","ESTADO":"POR EMBARCAR","CLIENTE":"IL POONG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":1.9,"TOTAL_VENTA":45600,"FORMA_PAGO":"30/70","TOTAL_PAGADO":0.0,"SALDOS":-45600.0,"BANCO":"SANTANDER"},{"PI":1055,"ESTADO":"POR EMBARCAR","CLIENTE":"IL POONG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":1.8,"TOTAL_VENTA":43200,"FORMA_PAGO":"30/70","ANTICIPO":12960.0,"FECHA_ANTICIPO":"2026-04-01","TOTAL_PAGADO":12960.0,"SALDOS":-30240.0,"BANCO":"SANTANDER"},{"PI":"1056-1","GD":3678.0,"FECHA_CARGA":"2026-04-11","ESTADO":"EMBARCADO","CLIENTE":"OVERSEA","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.9,"TOTAL_VENTA":51300,"FORMA_PAGO":"30/70","TOTAL_PAGADO":0.0,"SALDOS":-51300.0,"BANCO":"BCI"},{"PI":"1056-2","ESTADO":"POR EMBARCAR","CLIENTE":"OVERSEA","PRODUCTO":"FILETE","KILOS_NETOS":27000.0,"PRECIO":1.9,"TOTAL_VENTA":51300,"FORMA_PAGO":"30/70","TOTAL_PAGADO":0.0,"SALDOS":-51300.0,"BANCO":"BCI"},{"PI":"1057-1","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":2.0,"TOTAL_VENTA":48000,"FORMA_PAGO":"50/100","ANTICIPO":24000.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":24000.0,"SALDOS":-24000.0,"BANCO":"BCI"},{"PI":"1057-2","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":2.0,"TOTAL_VENTA":48000,"FORMA_PAGO":"50/100","ANTICIPO":24000.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":24000.0,"SALDOS":-24000.0,"BANCO":"BCI"},{"PI":"1057-3","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":2.0,"TOTAL_VENTA":48000,"FORMA_PAGO":"50/100","ANTICIPO":24000.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":24000.0,"SALDOS":-24000.0,"BANCO":"BCI"},{"PI":"1057-4","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":2.0,"TOTAL_VENTA":48000,"FORMA_PAGO":"50/100","ANTICIPO":24000.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":24000.0,"SALDOS":-24000.0,"BANCO":"BCI"},{"PI":"1057-5","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":2.0,"TOTAL_VENTA":48000,"FORMA_PAGO":"50/100","ANTICIPO":24000.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":24000.0,"SALDOS":-24000.0,"BANCO":"BCI"},{"PI":"1057-6","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":2.0,"TOTAL_VENTA":48000,"FORMA_PAGO":"50/100","ANTICIPO":24000.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":24000.0,"SALDOS":-24000.0,"BANCO":"BCI"},{"PI":"1058-1","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":2.3,"TOTAL_VENTA":55199.99999999999,"FORMA_PAGO":"30/70","ANTICIPO":16560.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":16560.0,"SALDOS":-38639.99999999999,"BANCO":"BCI"},{"PI":"1058-2","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":2.3,"TOTAL_VENTA":55199.99999999999,"FORMA_PAGO":"30/70","ANTICIPO":16560.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":16560.0,"SALDOS":-38639.99999999999,"BANCO":"BCI"},{"PI":"1058-3","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":2.3,"TOTAL_VENTA":55199.99999999999,"FORMA_PAGO":"30/70","ANTICIPO":16560.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":16560.0,"SALDOS":-38639.99999999999,"BANCO":"BCI"},{"PI":"1058-4","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":2.3,"TOTAL_VENTA":55199.99999999999,"FORMA_PAGO":"30/70","ANTICIPO":16560.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":16560.0,"SALDOS":-38639.99999999999,"BANCO":"BCI"},{"PI":"1058-5","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":2.3,"TOTAL_VENTA":55199.99999999999,"FORMA_PAGO":"30/70","ANTICIPO":16560.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":16560.0,"SALDOS":-38639.99999999999,"BANCO":"BCI"},{"PI":"1058-6","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":2.3,"TOTAL_VENTA":55199.99999999999,"FORMA_PAGO":"30/70","ANTICIPO":16560.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":16560.0,"SALDOS":-38639.99999999999,"BANCO":"BCI"},{"PI":"1058-7","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":2.3,"TOTAL_VENTA":55199.99999999999,"FORMA_PAGO":"30/70","ANTICIPO":16560.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":16560.0,"SALDOS":-38639.99999999999,"BANCO":"BCI"},{"PI":"1058-8","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":2.3,"TOTAL_VENTA":55199.99999999999,"FORMA_PAGO":"30/70","ANTICIPO":16560.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":16560.0,"SALDOS":-38639.99999999999,"BANCO":"BCI"},{"PI":"1058-9","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":2.3,"TOTAL_VENTA":55199.99999999999,"FORMA_PAGO":"30/70","ANTICIPO":16560.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":16560.0,"SALDOS":-38639.99999999999,"BANCO":"BCI"},{"PI":"1058-10","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":2.3,"TOTAL_VENTA":55199.99999999999,"FORMA_PAGO":"30/70","ANTICIPO":16560.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":16560.0,"SALDOS":-38639.99999999999,"BANCO":"BCI"},{"PI":"1058-11","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":2.3,"TOTAL_VENTA":55199.99999999999,"FORMA_PAGO":"30/70","ANTICIPO":16560.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":16560.0,"SALDOS":-38639.99999999999,"BANCO":"BCI"},{"PI":"1058-12","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":2.3,"TOTAL_VENTA":55199.99999999999,"FORMA_PAGO":"30/70","ANTICIPO":16560.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":16560.0,"SALDOS":-38639.99999999999,"BANCO":"BCI"},{"PI":"1058-13","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":2.3,"TOTAL_VENTA":55199.99999999999,"FORMA_PAGO":"30/70","ANTICIPO":16560.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":16560.0,"SALDOS":-38639.99999999999,"BANCO":"BCI"},{"PI":"1058-14","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":2.3,"TOTAL_VENTA":55199.99999999999,"FORMA_PAGO":"30/70","ANTICIPO":16560.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":16560.0,"SALDOS":-38639.99999999999,"BANCO":"BCI"},{"PI":"1058-15","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"FILETE","KILOS_NETOS":24000.0,"PRECIO":2.3,"TOTAL_VENTA":55199.99999999999,"FORMA_PAGO":"30/70","ANTICIPO":16560.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":16560.0,"SALDOS":-38639.99999999999,"BANCO":"BCI"},{"PI":"1058-16","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":2.1,"TOTAL_VENTA":50400,"FORMA_PAGO":"30/70","ANTICIPO":15120.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":15120.0,"SALDOS":-35280.0,"BANCO":"BCI"},{"PI":"1058-17","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":2.1,"TOTAL_VENTA":50400,"FORMA_PAGO":"30/70","ANTICIPO":15120.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":15120.0,"SALDOS":-35280.0,"BANCO":"BCI"},{"PI":"1058-18","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":2.1,"TOTAL_VENTA":50400,"FORMA_PAGO":"30/70","ANTICIPO":15120.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":15120.0,"SALDOS":-35280.0,"BANCO":"BCI"},{"PI":"1058-19","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":2.1,"TOTAL_VENTA":50400,"FORMA_PAGO":"30/70","ANTICIPO":15120.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":15120.0,"SALDOS":-35280.0,"BANCO":"BCI"},{"PI":"1058-20","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":2.1,"TOTAL_VENTA":50400,"FORMA_PAGO":"30/70","ANTICIPO":15120.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":15120.0,"SALDOS":-35280.0,"BANCO":"BCI"},{"PI":"1058-21","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":2.1,"TOTAL_VENTA":50400,"FORMA_PAGO":"30/70","ANTICIPO":15120.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":15120.0,"SALDOS":-35280.0,"BANCO":"BCI"},{"PI":"1058-22","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":2.1,"TOTAL_VENTA":50400,"FORMA_PAGO":"30/70","ANTICIPO":15120.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":15120.0,"SALDOS":-35280.0,"BANCO":"BCI"},{"PI":"1058-23","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":2.1,"TOTAL_VENTA":50400,"FORMA_PAGO":"30/70","ANTICIPO":15120.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":15120.0,"SALDOS":-35280.0,"BANCO":"BCI"},{"PI":"1058-24","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":2.1,"TOTAL_VENTA":50400,"FORMA_PAGO":"30/70","ANTICIPO":15120.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":15120.0,"SALDOS":-35280.0,"BANCO":"BCI"},{"PI":"1058-25","ESTADO":"POR EMBARCAR","CLIENTE":"HAERANG","PRODUCTO":"ALETA","KILOS_NETOS":24000.0,"PRECIO":2.1,"TOTAL_VENTA":50400,"FORMA_PAGO":"30/70","ANTICIPO":15120.0,"FECHA_ANTICIPO":"2026-04-09","TOTAL_PAGADO":15120.0,"SALDOS":-35280.0,"BANCO":"BCI"}];
+let DB=DB_FALLBACK;
+function parseSheetDate(v){if(!v)return null;const m=v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(m)return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');if(/^\d{4}-\d{2}-\d{2}/.test(v))return v.slice(0,10);return null;}
+function parseNum(v){if(v===null||v===undefined||v==='')return null;if(typeof v==='number')return v;const s=String(v).replace(/\./g,'').replace(',','.').replace(/[^0-9.-]/g,'');const n=parseFloat(s);return isNaN(n)?null:n;}
+function parseCSV(t){const rows=[];for(const ln of t.split('\n')){if(!ln.trim())continue;const cols=[];let q=false,c='';for(let i=0;i<ln.length;i++){const ch=ln[i];if(ch==='"'){if(q&&ln[i+1]==='"'){c+='"';i++;}else q=!q;}else if(ch===','&&!q){cols.push(c);c='';}else c+=ch;}cols.push(c);rows.push(cols);}return rows;}
+const NUM_F=["FX","GD","KILOS_NETOS","PRECIO","TOTAL_VENTA","ANTICIPO","ABONO1","ABONO2","CAMBIO_BL","TOTAL_PAGADO","SALDOS","PAGO_COMISION","VALOR_FLETE","FACTURA_FLETE","NOTA_COBRO","MONTO_ADUANA","MONTO_FLETE_TER","MONTO_EXTRA","FACT_EXTRA","FACTURA_TER"];
+const DATE_F=["FECHA_CARGA","FECHA_ANTICIPO","FECHA_ABONO1","FECHA_ABONO2","FECHA_PAGO_FLETE","FECHA_PAGO_TER","FECHA_PAGO_NOTA","FECHA_PAGO_EXTRA","ETD","ETA"];
+const COL_MAP={"PI":"PI","FX":"FX","GD":"GD","FECHA CARGA":"FECHA_CARGA","ESTADO":"ESTADO","CLIENTE":"CLIENTE","PRODUCTO":"PRODUCTO","KILOS NETOS":"KILOS_NETOS","PRECIO":"PRECIO","TOTAL VENTA":"TOTAL_VENTA","FORMA PAGO":"FORMA_PAGO","ANTICIPO":"ANTICIPO","FECHA ANTICIPO":"FECHA_ANTICIPO","ABONO 1":"ABONO1","FECHA ABONO 1":"FECHA_ABONO1","ABONO 2":"ABONO2","FECHA ABONO 2":"FECHA_ABONO2","CAMBIO BL NAVIERA":"CAMBIO_BL","CAMBIO BL/NAVIERA":"CAMBIO_BL","TOTAL PAGADO":"TOTAL_PAGADO","SALDOS":"SALDOS","FULL SET":"FULL_SET","BANCO":"BANCO","COMISIONISTA":"COMISIONISTA","PAGO COMISION":"PAGO_COMISION","PAGO COMISIÓN":"PAGO_COMISION","AGENTE MAR":"AGENTE_MAR","AGENTE MARITIMO":"AGENTE_MAR","AGENTE MARÍTIMO":"AGENTE_MAR","VALOR FLETE":"VALOR_FLETE","FACTURA FLETE":"FACTURA_FLETE","FECHA PAGO FLETE":"FECHA_PAGO_FLETE","AGENTE TER":"AGENTE_TER","AGENTE TERRESTRE":"AGENTE_TER","FACTURA TER":"FACTURA_TER","MONTO FLETE TER":"MONTO_FLETE_TER","FECHA PAGO TER":"FECHA_PAGO_TER","AGENTE ADUANA":"AGENTE_ADUANA","NOTA COBRO":"NOTA_COBRO","MONTO ADUANA":"MONTO_ADUANA","FECHA PAGO NOTA":"FECHA_PAGO_NOTA","AGENTE EXTRA":"AGENTE_EXTRA","FACT EXTRA":"FACT_EXTRA","MONTO EXTRA":"MONTO_EXTRA","FECHA PAGO EXTRA":"FECHA_PAGO_EXTRA","BANCO EXTRA":"BANCO_EXTRA","COMENTARIOS":"COMENTARIOS","ETD":"ETD","ETA":"ETA"};
+function buildDashboard(){document.getElementById('totalBadge').textContent=DB.length+' registros · 2026';populateFiltros();renderKPIs();renderCharts();renderPending();renderEmb();renderGastos();}
+async function loadFromSheets(){
+  const st=document.getElementById('syncStatus'),btn=document.getElementById('syncBtn');
+  st.textContent='⏳ Conectando con Google Sheets...';st.style.color='#f59e0b';
+  if(btn)btn.disabled=true;
+  try{
+    const url='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(SHEET_EMBARQUES);
+    const resp=await fetch(url,{cache:'no-cache'});
+    if(!resp.ok)throw new Error('HTTP '+resp.status);
+    const rows=parseCSV(await resp.text());
+    if(rows.length<2)throw new Error('vacía');
+    const hdr=rows[0].map(h=>h.trim().toUpperCase().replace(/\s+/g,' '));
+    const recs=[];
+    for(let i=1;i<rows.length;i++){
+      const row=rows[i];if(!row.some(c=>c.trim()))continue;
+      const r={};
+      hdr.forEach((h,idx)=>{const fn=COL_MAP[h]||h;r[fn]=row[idx]!==undefined?row[idx].trim()||null:null;});
+      r.CLIENTE=normClient(r.CLIENTE);
+      DATE_F.forEach(f=>{r[f]=parseSheetDate(r[f]);});
+      NUM_F.forEach(f=>{r[f]=parseNum(r[f]);});
+      recs.push(r);
+    }
+    if(!recs.length)throw new Error('sin datos');
+    DB=recs;
+    const t=new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+    st.innerHTML='✅ Datos en vivo &middot; '+recs.length+' registros &middot; '+t;
+    st.style.color='#10b981';
+    buildDashboard();
+  }catch(err){
+    console.warn('Sheets error:',err.message);
+    st.innerHTML='⚠️ Sin conexión &mdash; datos guardados ('+DB.length+' reg.)';
+    st.style.color='#f59e0b';
+    buildDashboard();
+  }finally{if(btn)btn.disabled=false;}
+}
+</script>
+<script>
+// ============================================================
+// HELPERS
+// ============================================================
+const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const COLORES_EST={'EMBARCADO':'#10b981','POR EMBARCAR':'#f59e0b','REDIRECCIONADO':'#6366f1','ANULADA':'#ef4444'};
+
+function fmt(n){if(!n&&n!==0)return'—';n=parseFloat(n);if(isNaN(n))return'—';return n.toLocaleString('es-CL',{maximumFractionDigits:0});}
+function fmtUSD(n){return n?'$'+fmt(n):'—';}
+function fmtCLP(n){if(!n)return'—';n=parseFloat(n);if(isNaN(n))return'—';if(n>=1e9)return'$'+(n/1e9).toFixed(1)+'B';if(n>=1e6)return'$'+(n/1e6).toFixed(1)+'M';return'$'+fmt(n);}
+function fmtD(d){return d?d.substring(0,10):'—';}
+function num(v){const n=parseFloat(v);return isNaN(n)?0:n;}
+
+function bEst(e){
+  if(!e)return'<span class="b b-gray">—</span>';
+  const t=e.trim();
+  if(t==='EMBARCADO')return`<span class="b b-g">✓ ${t}</span>`;
+  if(t==='POR EMBARCAR')return`<span class="b b-y">⏳ ${t}</span>`;
+  if(t==='REDIRECCIONADO')return`<span class="b b-b">↻ ${t}</span>`;
+  if(t.startsWith('ANULADA'))return`<span class="b b-r">✕ ANULADA</span>`;
+  return`<span class="b b-gray">${t}</span>`;
+}
+function bPago(r){
+  const s=num(r.SALDOS);
+  if(r.TOTAL_PAGADO && s===0)return'<span class="b b-g">✓ PAGADO</span>';
+  if(r.TOTAL_PAGADO && s<0)return`<span class="b b-r">SALDO $${fmt(Math.abs(s))}</span>`;
+  if(!r.TOTAL_VENTA)return'<span class="b b-gray">—</span>';
+  return'<span class="b b-o">PENDIENTE</span>';
+}
+
+let embPage=1, gastosPage=1;
+const PS=50;
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('hdrDate').textContent=new Date().toLocaleDateString('es-CL',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  loadFromSheets();
+});
+
+// ============================================================
+// FILTROS
+// ============================================================
+function populateFiltros(){
+  const clis=[...new Set(DB.map(r=>r.CLIENTE).filter(Boolean))].sort();
+  const ests=[...new Set(DB.map(r=>r.ESTADO).filter(Boolean))].sort();
+  const agms=[...new Set(DB.map(r=>r.AGENTE_MAR).filter(Boolean))].sort();
+  const agas=[...new Set(DB.map(r=>r.AGENTE_ADUANA).filter(Boolean))].sort();
+  fill('fCli',clis);fill('fEst',ests);
+  fill('fGCli',clis);fill('fGAgm',agms);fill('fGAga',agas);
+}
+function fill(id,vals){const s=document.getElementById(id);vals.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;s.appendChild(o);});}
+
+// ============================================================
+// KPIs
+// ============================================================
+function renderKPIs(){
+  const total=DB.length;
+  const emb=DB.filter(r=>r.ESTADO==='EMBARCADO').length;
+  const porEmb=DB.filter(r=>r.ESTADO==='POR EMBARCAR').length;
+  const anuladas=DB.filter(r=>(r.ESTADO||'').startsWith('ANULADA')).length;
+  const tv=DB.reduce((s,r)=>s+num(r.TOTAL_VENTA),0);
+  const tp=DB.reduce((s,r)=>s+num(r.TOTAL_PAGADO),0);
+  const kilos=DB.reduce((s,r)=>s+num(r.KILOS_NETOS),0);
+  const conSaldo=DB.filter(r=>num(r.SALDOS)<0).length;
+  const clientes=new Set(DB.map(r=>r.CLIENTE).filter(Boolean)).size;
+
+  document.getElementById('kpiGrid').innerHTML=`
+    <div class="kpi a"><div class="kpi-lbl">Total Embarques</div><div class="kpi-val">${total}</div><div class="kpi-sub">${clientes} clientes</div></div>
+    <div class="kpi g"><div class="kpi-lbl">Embarcados</div><div class="kpi-val">${emb}</div><div class="kpi-sub">${((emb/total)*100).toFixed(0)}% del total</div></div>
+    <div class="kpi y"><div class="kpi-lbl">Por Embarcar</div><div class="kpi-val">${porEmb}</div><div class="kpi-sub">pendientes de zarpe</div></div>
+    <div class="kpi r"><div class="kpi-lbl">Con Saldo Pendiente</div><div class="kpi-val">${conSaldo}</div><div class="kpi-sub">sin pago completo</div></div>
+    <div class="kpi"><div class="kpi-lbl">Total Venta USD</div><div class="kpi-val">$${fmt(tv)}</div><div class="kpi-sub">facturación total</div></div>
+    <div class="kpi g"><div class="kpi-lbl">Total Cobrado USD</div><div class="kpi-val">$${fmt(tp)}</div><div class="kpi-sub">${tv>0?((tp/tv)*100).toFixed(0):'0'}% cobrado</div></div>
+    <div class="kpi p"><div class="kpi-lbl">Kilos Exportados</div><div class="kpi-val">${(kilos/1e6).toFixed(1)}M</div><div class="kpi-sub">kg netos totales</div></div>
+    <div class="kpi r"><div class="kpi-lbl">Anuladas</div><div class="kpi-val">${anuladas}</div><div class="kpi-sub">registros anulados</div></div>
+  `;
+}
+
+// ============================================================
+// CHARTS
+// ============================================================
+function renderCharts(){
+  // By client
+  const byCli={};
+  DB.forEach(r=>{if(r.CLIENTE)byCli[r.CLIENTE]=(byCli[r.CLIENTE]||0)+1;});
+  renderBar('cCli',byCli,12,'#2563eb');
+
+  // By month
+  const byMes={};
+  DB.forEach(r=>{
+    if(r.FECHA_CARGA){
+      const m=parseInt(r.FECHA_CARGA.substring(5,7))-1;
+      const k=MESES[m];
+      byMes[k]=(byMes[k]||0)+1;
+    }
+  });
+  // Sort by month order
+  const mesOrden={Ene:1,Feb:2,Mar:3,Abr:4,May:5,Jun:6,Jul:7,Ago:8,Sep:9,Oct:10,Nov:11,Dic:12};
+  const byMesSorted={};
+  Object.keys(mesOrden).forEach(m=>{if(byMes[m])byMesSorted[m]=byMes[m];});
+  renderBar('cMes',byMesSorted,12,'#0ea5e9',true);
+
+  // Estado donut
+  const byEst={};
+  DB.forEach(r=>{if(r.ESTADO){const t=r.ESTADO.trim();byEst[t]=(byEst[t]||0)+1;}});
+  const total=Object.values(byEst).reduce((a,b)=>a+b,0);
+  const circ=2*Math.PI*45;
+  let svg=`<svg width="110" height="110" viewBox="0 0 110 110">`;
+  let off=0;
+  Object.entries(byEst).forEach(([k,v])=>{
+    const pct=v/total;
+    const dash=pct*circ;
+    const col=COLORES_EST[k]||'#94a3b8';
+    svg+=`<circle cx="55" cy="55" r="45" fill="none" stroke="${col}" stroke-width="20" stroke-dasharray="${dash} ${circ-dash}" stroke-dashoffset="${-off*circ}" transform="rotate(-90 55 55)"/>`;
+    off+=pct;
+  });
+  svg+=`<text x="55" y="59" text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b">${total}</text></svg>`;
+  const leg=Object.entries(byEst).map(([k,v])=>
+    `<div class="leg-row"><div class="leg-dot" style="background:${COLORES_EST[k]||'#94a3b8'}"></div><span>${k.trim()}: <strong>${v}</strong></span></div>`
+  ).join('');
+  document.getElementById('cEst').innerHTML=svg+`<div class="donut-leg">${leg}</div>`;
+
+  // By product
+  const byProd={};
+  DB.forEach(r=>{if(r.PRODUCTO){const p=r.PRODUCTO.trim();byProd[p]=(byProd[p]||0)+1;}});
+  renderBar('cProd',byProd,10,'#8b5cf6');
+}
+
+function renderBar(id,data,max,color,keepOrder=false){
+  const entries=keepOrder?Object.entries(data):Object.entries(data).sort((a,b)=>b[1]-a[1]);
+  const top=entries.slice(0,max);
+  const mx=top[0]?.[1]||1;
+  document.getElementById(id).innerHTML=top.map(([k,v])=>
+    `<div class="bc-row">
+      <div class="bc-lbl" title="${k}">${k}</div>
+      <div class="bc-trk"><div class="bc-fill" style="width:${(v/mx*100).toFixed(1)}%;background:${color}"></div></div>
+      <div class="bc-val">${v}</div>
+    </div>`
+  ).join('');
+}
+
+// ============================================================
+// PENDING TABLE
+// ============================================================
+function renderPending(){
+  const pend=DB.filter(r=>num(r.SALDOS)<0 && !(r.ESTADO||'').startsWith('ANULADA'));
+  document.getElementById('pendCnt').textContent=`${pend.length} registros`;
+  document.getElementById('pendTable').innerHTML=pend.map(r=>`
+    <tr>
+      <td><strong>${r.PI}</strong></td>
+      <td>${fmtD(r.FECHA_CARGA)}</td>
+      <td>${r.CLIENTE||'—'}</td>
+      <td>${(r.PRODUCTO||'—').trim()}</td>
+      <td><strong>${fmtUSD(r.TOTAL_VENTA)}</strong></td>
+      <td>${fmtUSD(r.TOTAL_PAGADO)}</td>
+      <td><span style="color:#ef4444;font-weight:600;">$${fmt(Math.abs(num(r.SALDOS)))}</span></td>
+      <td>${bEst(r.ESTADO)}</td>
+      <td><button class="btn btn-s" style="padding:2px 7px;font-size:.72rem;" onclick='openMod(${JSON.stringify(r).replace(/'/g,"&#39;")})'>Ver</button></td>
+    </tr>
+  `).join('')||'<tr><td colspan="9" class="no-res"><div class="no-res-ic">✅</div>Sin saldos pendientes</td></tr>';
+}
+
+// ============================================================
+// EMBARQUES TABLE
+// ============================================================
+function getFiltEmb(){
+  const cli=document.getElementById('fCli').value;
+  const est=document.getElementById('fEst').value;
+  const pago=document.getElementById('fPago').value;
+  const desde=document.getElementById('fDesde').value;
+  const hasta=document.getElementById('fHasta').value;
+  const srch=document.getElementById('fSearch').value.toLowerCase();
+  return DB.filter(r=>{
+    if(cli&&r.CLIENTE!==cli)return false;
+    if(est&&(r.ESTADO||'').trim()!==est)return false;
+    if(pago==='ok'&&num(r.SALDOS)<0)return false;
+    if(pago==='pend'&&num(r.SALDOS)>=0)return false;
+    if(desde&&r.FECHA_CARGA&&r.FECHA_CARGA<desde)return false;
+    if(hasta&&r.FECHA_CARGA&&r.FECHA_CARGA>hasta)return false;
+    if(srch){
+      const hay=[r.PI,r.PRODUCTO,r.CLIENTE,r.AGENTE_MAR,r.GD].join(' ').toLowerCase();
+      if(!hay.includes(srch))return false;
+    }
+    return true;
+  });
+}
+
+function renderEmb(){embPage=1;renderEmbPage();}
+function renderEmbPage(){
+  const d=getFiltEmb();
+  const pg=d.slice((embPage-1)*PS,embPage*PS);
+  document.getElementById('embTable').innerHTML=pg.map(r=>`
+    <tr>
+      <td><strong>${r.PI}</strong></td>
+      <td>${fmtD(r.FECHA_CARGA)}</td>
+      <td>${r.CLIENTE||'—'}</td>
+      <td>${(r.PRODUCTO||'—').trim()}</td>
+      <td>${r.KILOS_NETOS?fmt(r.KILOS_NETOS)+' kg':'—'}</td>
+      <td>${r.PRECIO?'$'+r.PRECIO:'—'}</td>
+      <td><strong>${fmtUSD(r.TOTAL_VENTA)}</strong></td>
+      <td>${bEst(r.ESTADO)}</td>
+      <td>${r.FORMA_PAGO||'—'}</td>
+      <td>${fmtUSD(r.TOTAL_PAGADO)}</td>
+      <td>${r.SALDOS!==undefined&&r.SALDOS!==null?'<span style="color:'+(num(r.SALDOS)<0?'#ef4444':'#10b981')+';font-weight:600;">'+(num(r.SALDOS)<0?'-':'')+'$'+fmt(Math.abs(num(r.SALDOS)))+'</span>':'—'}</td>
+      <td><button class="btn btn-s" style="padding:2px 7px;font-size:.72rem;" onclick='openMod(${JSON.stringify(r).replace(/'/g,"&#39;")})'>Ver</button></td>
+    </tr>
+  `).join('')||'<tr><td colspan="12" class="no-res"><div class="no-res-ic">🔍</div>Sin resultados</td></tr>';
+  renderPag('embPag',d.length,embPage,p=>{embPage=p;renderEmbPage();});
+}
+
+function clearFE(){['fCli','fEst','fPago'].forEach(i=>document.getElementById(i).value='');['fDesde','fHasta','fSearch'].forEach(i=>document.getElementById(i).value='');renderEmb();}
+
+// ============================================================
+// GASTOS TABLE
+// ============================================================
+function getFiltGastos(){
+  const cli=document.getElementById('fGCli').value;
+  const agm=document.getElementById('fGAgm').value;
+  const aga=document.getElementById('fGAga').value;
+  const srch=document.getElementById('fGSearch').value.toLowerCase();
+  return DB.filter(r=>{
+    if(cli&&r.CLIENTE!==cli)return false;
+    if(agm&&r.AGENTE_MAR!==agm)return false;
+    if(aga&&r.AGENTE_ADUANA!==aga)return false;
+    if(srch&&!String(r.PI||'').toLowerCase().includes(srch))return false;
+    return true;
+  });
+}
+
+function renderGastos(){gastosPage=1;renderGastosPage();}
+function renderGastosPage(){
+  const d=getFiltGastos();
+  const pg=d.slice((gastosPage-1)*PS,gastosPage*PS);
+  document.getElementById('gastosTable').innerHTML=pg.map(r=>`
+    <tr>
+      <td><strong>${r.PI}</strong></td>
+      <td>${r.CLIENTE||'—'}</td>
+      <td>${(r.PRODUCTO||'—').trim()}</td>
+      <td>${r.AGENTE_MAR||'—'}</td>
+      <td>${r.VALOR_FLETE?'$'+r.VALOR_FLETE:'—'}</td>
+      <td>${r.FACTURA_FLETE||'—'}</td>
+      <td>${fmtD(r.FECHA_PAGO_FLETE)}</td>
+      <td>${r.AGENTE_TER||'—'}</td>
+      <td>${r.FACTURA_TER||'—'}</td>
+      <td>${fmtCLP(r.MONTO_FLETE_TER)}</td>
+      <td>${fmtD(r.FECHA_PAGO_TER)}</td>
+      <td>${r.AGENTE_ADUANA||'—'}</td>
+      <td>${r.NOTA_COBRO||'—'}</td>
+      <td>${fmtCLP(r.MONTO_ADUANA)}</td>
+      <td>${fmtD(r.FECHA_PAGO_NOTA)}</td>
+      <td>${r.AGENTE_EXTRA||'—'}</td>
+      <td>${r.FACT_EXTRA||'—'}</td>
+      <td>${fmtCLP(r.MONTO_EXTRA)}</td>
+      <td>${r.BANCO_EXTRA||'—'}</td>
+      <td><button class="btn btn-s" style="padding:2px 7px;font-size:.72rem;" onclick='openMod(${JSON.stringify(r).replace(/'/g,"&#39;")})'>Ver</button></td>
+    </tr>
+  `).join('')||'<tr><td colspan="20" class="no-res"><div class="no-res-ic">🔍</div>Sin resultados</td></tr>';
+  renderPag('gastosPag',d.length,gastosPage,p=>{gastosPage=p;renderGastosPage();});
+}
+
+function clearFG(){['fGCli','fGAgm','fGAga'].forEach(i=>document.getElementById(i).value='');document.getElementById('fGSearch').value='';renderGastos();}
+
+// ============================================================
+// PAGINATION
+// ============================================================
+function renderPag(id,total,cur,cb){
+  const pages=Math.ceil(total/PS);
+  if(pages<=1){document.getElementById(id).innerHTML=`<span class="pi">${total} registros</span>`;return;}
+  let h=`<span class="pi">${total} registros</span>`;
+  if(cur>1)h+=`<button class="pg" onclick="(${cb.toString()})(${cur-1})">‹</button>`;
+  const s=Math.max(1,cur-2),e=Math.min(pages,cur+2);
+  if(s>1)h+=`<button class="pg" onclick="(${cb.toString()})(1)">1</button>${s>2?'<span>…</span>':''}`;
+  for(let p=s;p<=e;p++)h+=`<button class="pg${p===cur?' on':''}" onclick="(${cb.toString()})(${p})">${p}</button>`;
+  if(e<pages)h+=`${e<pages-1?'<span>…</span>':''}<button class="pg" onclick="(${cb.toString()})(${pages})">${pages}</button>`;
+  if(cur<pages)h+=`<button class="pg" onclick="(${cb.toString()})(${cur+1})">›</button>`;
+  document.getElementById(id).innerHTML=h;
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+function mf(l,v){return`<div><div class="mf-lbl">${l}</div><div class="mf-val">${v||'—'}</div></div>`;}
+
+function openMod(r){
+  if(typeof r==='string')r=JSON.parse(r);
+  document.getElementById('mContent').innerHTML=`
+    <div class="modal-hdr">
+      <div class="modal-ttl">📦 Embarque PI: ${r.PI}</div>
+      <button class="modal-x" onclick="document.getElementById('mOv').classList.remove('open')">✕</button>
+    </div>
+    <div class="mg">
+      ${mf('PI / Proforma',r.PI)} ${mf('Fecha Carga',fmtD(r.FECHA_CARGA))}
+      ${mf('Cliente',r.CLIENTE)} ${mf('Producto',(r.PRODUCTO||'').trim())}
+      ${mf('Kilos Netos',r.KILOS_NETOS?fmt(r.KILOS_NETOS)+' kg':'—')} ${mf('Precio USD',r.PRECIO?'$'+r.PRECIO:'—')}
+      ${mf('Total Venta',fmtUSD(r.TOTAL_VENTA))} ${mf('ETD / ETA',fmtD(r.ETD)+' / '+fmtD(r.ETA))}
+      ${mf('Estado',bEst(r.ESTADO))} ${mf('Estado Pago',bPago(r))}
+    </div>
+    <div class="ms">
+      <div class="ms-ttl">💰 Pagos</div>
+      <div class="mg">
+        ${mf('Forma Pago',r.FORMA_PAGO)} ${mf('Banco',r.BANCO)}
+        ${mf('Anticipo',fmtUSD(r.ANTICIPO))} ${mf('Fecha Anticipo',fmtD(r.FECHA_ANTICIPO))}
+        ${mf('Abono 1',fmtUSD(r.ABONO1))} ${mf('Fecha Abono 1',fmtD(r.FECHA_ABONO1))}
+        ${mf('Abono 2',fmtUSD(r.ABONO2))} ${mf('Fecha Abono 2',fmtD(r.FECHA_ABONO2))}
+        ${mf('Cambio BL',r.CAMBIO_BL||'—')} ${mf('Full Set',r.FULL_SET||'—')}
+        ${mf('Total Pagado','<strong>'+fmtUSD(r.TOTAL_PAGADO)+'</strong>')} ${mf('Saldo',r.SALDOS!==null&&r.SALDOS!==undefined?'<span style="color:'+(num(r.SALDOS)<0?'#ef4444':'#10b981')+';">$'+fmt(r.SALDOS)+'</span>':'—')}
+      </div>
+    </div>
+    <div class="ms">
+      <div class="ms-ttl">🚢 Flete Marítimo</div>
+      <div class="mg">
+        ${mf('Agente',r.AGENTE_MAR)} ${mf('Valor Flete USD',r.VALOR_FLETE?'$'+r.VALOR_FLETE:'—')}
+        ${mf('Factura Flete',r.FACTURA_FLETE)} ${mf('Fecha Pago',fmtD(r.FECHA_PAGO_FLETE))}
+      </div>
+    </div>
+    <div class="ms">
+      <div class="ms-ttl">🚛 Flete Terrestre</div>
+      <div class="mg">
+        ${mf('Agente',r.AGENTE_TER)} ${mf('Factura',r.FACTURA_TER)}
+        ${mf('Monto CLP',fmtCLP(r.MONTO_FLETE_TER))} ${mf('Fecha Pago',fmtD(r.FECHA_PAGO_TER))}
+      </div>
+    </div>
+    <div class="ms">
+      <div class="ms-ttl">🏛️ Aduana</div>
+      <div class="mg">
+        ${mf('Agente',r.AGENTE_ADUANA)} ${mf('Nota Cobro',r.NOTA_COBRO)}
+        ${mf('Monto CLP',fmtCLP(r.MONTO_ADUANA))} ${mf('Fecha Pago',fmtD(r.FECHA_PAGO_NOTA))}
+      </div>
+    </div>
+    ${(r.AGENTE_EXTRA||r.MONTO_EXTRA)?`<div class="ms"><div class="ms-ttl">➕ Gastos Extra</div><div class="mg">
+      ${mf('Agente',r.AGENTE_EXTRA)} ${mf('Factura',r.FACT_EXTRA)}
+      ${mf('Monto CLP',fmtCLP(r.MONTO_EXTRA))} ${mf('Fecha Pago',fmtD(r.FECHA_PAGO_EXTRA))}
+      ${mf('Banco',r.BANCO_EXTRA)}
+    </div></div>`:''}
+    ${r.COMISIONISTA?`<div class="ms"><div class="ms-ttl">🤝 Comisión</div><div class="mg">
+      ${mf('Comisionista',r.COMISIONISTA)} ${mf('Pago Comisión',fmtUSD(r.PAGO_COMISION))}
+      ${mf('Fecha Pago',fmtD(r.FECHA_PAGO_COMISION))}
+    </div></div>`:''}
+    ${r.COMENTARIOS?`<div class="ms"><div class="ms-ttl">💬 Comentarios</div><p style="font-size:.85rem;color:#475569;">${r.COMENTARIOS}</p></div>`:''}
+  `;
+  document.getElementById('mOv').classList.add('open');
+}
+function closeMod(e){if(e.target===document.getElementById('mOv'))document.getElementById('mOv').classList.remove('open');}
+
+// ============================================================
+// TABS
+// ============================================================
+function goTab(t){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('p-'+t).classList.add('on');
+  document.getElementById('t-'+t).classList.add('on');
+}
+
+// ============================================================
+// QUERY ENGINE
+// ============================================================
+function setQ(t){document.getElementById('qInput').value=t;goTab('consulta');runQuery();}
+
+function runQuery(){
+  const raw=document.getElementById('qInput').value.trim();
+  if(!raw)return;
+
+  // Normalize query
+  const q=raw.toLowerCase()
+    .replace(/[áàâä]/g,'a').replace(/[éèêë]/g,'e')
+    .replace(/[íìîï]/g,'i').replace(/[óòôö]/g,'o')
+    .replace(/[úùûü]/g,'u').replace(/ñ/g,'n');
+
+  const MONTHS={enero:1,ene:1,febrero:2,feb:2,marzo:3,mar:3,abril:4,abr:4,
+    mayo:5,may:5,junio:6,jun:6,julio:7,jul:7,agosto:8,ago:8,
+    septiembre:9,sep:9,octubre:10,oct:10,noviembre:11,nov:11,diciembre:12,dic:12};
+
+  let foundMonths=[];
+  Object.entries(MONTHS).forEach(([n,m])=>{if(q.includes(n))foundMonths.push(m);});
+  foundMonths=[...new Set(foundMonths)];
+
+  // Date range e.g. "del 15 al 30"
+  const rangeM=q.match(/del?\s+(\d{1,2})\s+(?:de\s+\w+\s+)?al\s+(\d{1,2})/);
+  let dayFrom=null,dayTo=null;
+  if(rangeM){dayFrom=parseInt(rangeM[1]);dayTo=parseInt(rangeM[2]);}
+
+  let dateFrom=null,dateTo=null;
+  if(foundMonths.length>0){
+    const month=foundMonths[0];
+    const d1=dayFrom||1;
+    const d2=dayTo||new Date(2026,month,0).getDate();
+    dateFrom=`2026-${String(month).padStart(2,'0')}-${String(d1).padStart(2,'0')}`;
+    dateTo=`2026-${String(month).padStart(2,'0')}-${String(d2).padStart(2,'0')}`;
+  }
+
+  // Client detection
+  const ALL_CLIS=[...new Set(DB.map(r=>r.CLIENTE).filter(Boolean))];
+  let cliFilter=null;
+  ALL_CLIS.forEach(c=>{
+    const cn=c.toLowerCase().replace(/[áéíóú]/g,m=>'aeiou'['áéíóú'.indexOf(m)]||m);
+    const words=cn.split(' ').filter(w=>w.length>3);
+    if(q.includes(cn)||words.some(w=>q.includes(w)))cliFilter=c;
+  });
+
+  // Agent detection
+  const ALL_AGENTS=[...new Set([...DB.map(r=>r.AGENTE_MAR),...DB.map(r=>r.AGENTE_TER),...DB.map(r=>r.AGENTE_ADUANA)].filter(Boolean))];
+  let agentFilter=null;
+  ALL_AGENTS.forEach(a=>{if(a&&q.includes(a.toLowerCase()))agentFilter=a;});
+
+  // What to show
+  const wantsGastos=q.includes('gasto')||q.includes('flete')||q.includes('aduana')||q.includes('pagar')||agentFilter;
+  const wantsEmb=!wantsGastos||q.includes('proforma')||q.includes('embarque')||q.includes('estado')||q.includes('saldo')||q.includes('pago')||cliFilter;
+
+  // Estado filter
+  let estFilter=null;
+  if(q.includes('por embarcar'))estFilter='POR EMBARCAR';
+  else if(q.includes('embarcado')&&!q.includes('por'))estFilter='EMBARCADO';
+  else if(q.includes('anulada'))estFilter='ANULADA';
+  else if(q.includes('redireccionado'))estFilter='REDIRECCIONADO';
+
+  // Filter records
+  let results=DB.filter(r=>{
+    if(cliFilter&&r.CLIENTE!==cliFilter)return false;
+    if(estFilter&&!(r.ESTADO||'').startsWith(estFilter))return false;
+    if(dateFrom&&r.FECHA_CARGA&&(r.FECHA_CARGA<dateFrom||r.FECHA_CARGA>dateTo))return false;
+    if(q.includes('saldo')||q.includes('pendiente')){
+      if(q.includes('saldo')&&!q.includes('todo'))if(num(r.SALDOS)>=0)return false;
+    }
+    if(q.includes('pagado')&&!q.includes('por'))if(num(r.SALDOS)!==0)return false;
+    // agent filter applies to gastos view
+    if(agentFilter&&!wantsEmb){
+      if(r.AGENTE_MAR!==agentFilter&&r.AGENTE_TER!==agentFilter&&r.AGENTE_ADUANA!==agentFilter)return false;
+    }
+    return true;
+  });
+
+  // Stats
+  const tvTotal=results.reduce((s,r)=>s+num(r.TOTAL_VENTA),0);
+  const tpTotal=results.reduce((s,r)=>s+num(r.TOTAL_PAGADO),0);
+  const saldoNeg=results.filter(r=>num(r.SALDOS)<0).reduce((s,r)=>s+Math.abs(num(r.SALDOS)),0);
+  const tFlMar=results.reduce((s,r)=>s+num(r.VALOR_FLETE),0);
+  const tFlTer=results.reduce((s,r)=>s+num(r.MONTO_FLETE_TER),0);
+  const tAduana=results.reduce((s,r)=>s+num(r.MONTO_ADUANA),0);
+
+  let summaryItems=[];
+  if(results.length)summaryItems.push(`<div class="sum-item">Registros: <strong>${results.length}</strong></div>`);
+  if(tvTotal)summaryItems.push(`<div class="sum-item">Total Venta: <strong>${fmtUSD(tvTotal)}</strong></div>`);
+  if(tpTotal)summaryItems.push(`<div class="sum-item">Total Cobrado: <strong>${fmtUSD(tpTotal)}</strong></div>`);
+  if(saldoNeg)summaryItems.push(`<div class="sum-item" style="color:#ef4444;">Saldo Pendiente: <strong>${fmtUSD(saldoNeg)}</strong></div>`);
+  if(wantsGastos&&tFlTer)summaryItems.push(`<div class="sum-item">Flete Terrestre CLP: <strong>${fmtCLP(tFlTer)}</strong></div>`);
+  if(wantsGastos&&tAduana)summaryItems.push(`<div class="sum-item">Aduana CLP: <strong>${fmtCLP(tAduana)}</strong></div>`);
+
+  if(!results.length){
+    document.getElementById('qResults').innerHTML=`
+      <div class="qresult">
+        <div class="qr-hdr"><div class="qr-ttl">🔍 "${raw}"</div></div>
+        <div class="no-res"><div class="no-res-ic">🔍</div><div>No se encontraron resultados.</div>
+        <div style="font-size:.78rem;margin-top:6px;color:#94a3b8;">Prueba con el nombre del cliente, mes o agente.</div></div>
+      </div>`;
+    return;
+  }
+
+  let html=`<div class="qresult">
+    <div class="qr-hdr">
+      <div class="qr-ttl">🔍 Resultados para: "${raw}"</div>
+      <div class="qr-cnt">${results.length} registros encontrados</div>
+    </div>
+    ${summaryItems.length?`<div class="qr-sum"><div class="sum-grid">${summaryItems.join('')}</div></div>`:''}
+  `;
+
+  // Embarques section
+  if(wantsEmb||!wantsGastos){
+    html+=`<div class="rsec-lbl">📦 EMBARQUES</div>
+    <div style="padding:0 18px 14px;">
+    <div class="twrap scroll" style="max-height:380px;">
+    <table><thead><tr>
+      <th>PI</th><th>Fecha Carga</th><th>Cliente</th><th>Producto</th>
+      <th>Total Venta</th><th>Estado</th><th>Forma Pago</th><th>Total Pagado</th><th>Saldo</th><th>ETD</th><th>ETA</th><th>Ver</th>
+    </tr></thead><tbody>
+    ${results.map(r=>`<tr>
+      <td><strong>${r.PI}</strong></td>
+      <td>${fmtD(r.FECHA_CARGA)}</td>
+      <td>${r.CLIENTE||'—'}</td>
+      <td>${(r.PRODUCTO||'—').trim()}</td>
+      <td><strong>${fmtUSD(r.TOTAL_VENTA)}</strong></td>
+      <td>${bEst(r.ESTADO)}</td>
+      <td>${r.FORMA_PAGO||'—'}</td>
+      <td>${fmtUSD(r.TOTAL_PAGADO)}</td>
+      <td>${r.SALDOS!==null&&r.SALDOS!==undefined?'<span style="color:'+(num(r.SALDOS)<0?'#ef4444':'#10b981')+';font-weight:600;">'+(num(r.SALDOS)<0?'-':'')+'$'+fmt(Math.abs(num(r.SALDOS)))+'</span>':'—'}</td>
+      <td>${fmtD(r.ETD)}</td><td>${fmtD(r.ETA)}</td>
+      <td><button class="btn btn-s" style="padding:2px 7px;font-size:.72rem;" onclick='openMod(${JSON.stringify(r).replace(/'/g,"&#39;")})'>Ver</button></td>
+    </tr>`).join('')}
+    </tbody></table></div></div>`;
+  }
+
+  // Gastos section
+  if(wantsGastos){
+    const gastosRows=results.filter(r=>r.AGENTE_MAR||r.AGENTE_TER||r.AGENTE_ADUANA);
+    if(gastosRows.length){
+      html+=`<div class="rsec-lbl" style="border-top:1px solid var(--border);padding-top:14px;">💰 GASTOS & FLETES</div>
+      <div style="padding:0 18px 14px;">
+      <div class="twrap scroll" style="max-height:380px;">
+      <table><thead><tr>
+        <th>PI</th><th>Cliente</th><th>Ag. Marítimo</th><th>Val. Flete USD</th><th>Fecha Pago Flete</th>
+        <th>Ag. Terrestre</th><th>Monto Flete Ter</th><th>Fecha Pago Ter</th>
+        <th>Ag. Aduana</th><th>Monto Aduana</th><th>Fecha Pago Nota</th>
+        <th>Ag. Extra</th><th>Monto Extra</th><th>Ver</th>
+      </tr></thead><tbody>
+      ${gastosRows.map(r=>`<tr>
+        <td><strong>${r.PI}</strong></td>
+        <td>${r.CLIENTE||'—'}</td>
+        <td>${r.AGENTE_MAR||'—'}</td>
+        <td>${r.VALOR_FLETE?'$'+r.VALOR_FLETE:'—'}</td>
+        <td>${fmtD(r.FECHA_PAGO_FLETE)}</td>
+        <td>${r.AGENTE_TER||'—'}</td>
+        <td>${fmtCLP(r.MONTO_FLETE_TER)}</td>
+        <td>${fmtD(r.FECHA_PAGO_TER)}</td>
+        <td>${r.AGENTE_ADUANA||'—'}</td>
+        <td>${fmtCLP(r.MONTO_ADUANA)}</td>
+        <td>${fmtD(r.FECHA_PAGO_NOTA)}</td>
+        <td>${r.AGENTE_EXTRA||'—'}</td>
+        <td>${fmtCLP(r.MONTO_EXTRA)}</td>
+        <td><button class="btn btn-s" style="padding:2px 7px;font-size:.72rem;" onclick='openMod(${JSON.stringify(r).replace(/'/g,"&#39;")})'>Ver</button></td>
+      </tr>`).join('')}
+      </tbody></table></div></div>`;
+    }
+  }
+
+  html+='</div>';
+  document.getElementById('qResults').innerHTML=html;
+}
+</script>
+</body>
+</html>
